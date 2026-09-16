@@ -103,8 +103,8 @@
       <div id="s-batches" class="text-3xl font-black text-cyan-400">0</div>
     </div>
     <div class="glass rounded-2xl p-5">
-      <div class="text-xs text-slate-400 font-bold mb-1">قيمة المخزون</div>
-      <div id="s-value" class="text-3xl font-black text-yellow-400">0</div>
+      <div class="text-xs text-slate-400 font-bold mb-1">الفروع</div>
+      <div id="s-branches" class="text-3xl font-black text-purple-400">0</div>
     </div>
     <div class="glass rounded-2xl p-5">
       <div class="text-xs text-slate-400 font-bold mb-1">مسجّلون هذا الأسبوع</div>
@@ -132,7 +132,9 @@
               <th class="p-3 text-right font-bold">#</th>
               <th class="p-3 text-right font-bold">الصيدلية</th>
               <th class="p-3 text-center font-bold">الأدوية</th>
+              <th class="p-3 text-center font-bold">الفروع</th>
               <th class="p-3 text-center font-bold">القيمة</th>
+              <th class="p-3 text-center font-bold">التصنيف</th>
               <th class="p-3 text-center font-bold">الحالة</th>
               <th class="p-3 text-center font-bold">المتبقي</th>
               <th class="p-3 text-center font-bold">إجراءات</th>
@@ -155,12 +157,23 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let allPharmacies = [];
 let allBatches = [];
+let allBranches = [];
 
 // ============================================================
 // Helpers
 // ============================================================
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function getClassification(branchCount, batchCount) {
+  if (branchCount >= 4 || batchCount >= 500) {
+    return { icon: '🌳', label: 'متقدم', color: 'text-emerald-400 bg-emerald-500/20' };
+  }
+  if (branchCount >= 2 || batchCount >= 100) {
+    return { icon: '🌿', label: 'نشط', color: 'text-teal-400 bg-teal-500/20' };
+  }
+  return { icon: '🌱', label: 'مبتدئ', color: 'text-slate-400 bg-slate-500/20' };
 }
 
 // ============================================================
@@ -184,7 +197,6 @@ async function handleLogin(e) {
     return;
   }
 
-  // التحقق من صلاحيات الأدمن
   const { data: adminData, error: adminErr } = await supabaseClient.from('admin_users').select('user_id').maybeSingle();
   if (adminErr || !adminData) {
     await supabaseClient.auth.signOut();
@@ -215,11 +227,17 @@ async function showDashboard() {
 }
 
 async function loadData() {
-  const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('created_at', { ascending: false });
+  const { data: pharmacies, error: e1 } = await supabaseClient.from('pharmacies').select('*').order('created_at', { ascending: false });
+  if (e1) console.error('pharmacies:', e1);
   allPharmacies = pharmacies || [];
 
-  const { data: batches } = await supabaseClient.from('batches').select('*');
+  const { data: batches, error: e2 } = await supabaseClient.from('batches').select('*');
+  if (e2) console.error('batches:', e2);
   allBatches = batches || [];
+
+  const { data: branches, error: e3 } = await supabaseClient.from('branches').select('*');
+  if (e3) console.error('branches:', e3);
+  allBranches = branches || [];
 
   renderStats();
   renderPharmacies();
@@ -228,9 +246,7 @@ async function loadData() {
 function renderStats() {
   document.getElementById('s-pharmacies').textContent = allPharmacies.length;
   document.getElementById('s-batches').textContent = allBatches.length;
-
-  const totalValue = allBatches.reduce((s, b) => s + (b.qty * Number(b.cost)), 0);
-  document.getElementById('s-value').textContent = totalValue.toFixed(0);
+  document.getElementById('s-branches').textContent = allBranches.length;
 
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const thisWeek = allPharmacies.filter(p => new Date(p.created_at).getTime() > weekAgo).length;
@@ -253,21 +269,26 @@ function renderPharmacies() {
 
   const tb = document.getElementById('table-body');
   if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500 p-8">لا توجد صيدليات.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 p-8">لا توجد صيدليات.</td></tr>';
     return;
   }
 
   const now = new Date();
   tb.innerHTML = filtered.map((p, i) => {
     const pharmacyBatches = allBatches.filter(b => b.user_id === p.user_id);
-    const count = pharmacyBatches.length;
+    const batchCount = pharmacyBatches.length;
     const value = pharmacyBatches.reduce((s, b) => s + (b.qty * Number(b.cost)), 0);
+    
+    const pharmacyBranches = allBranches.filter(b => b.user_id === p.user_id);
+    const branchCount = pharmacyBranches.length;
 
     const status = p.subscription_status || 'trial';
     const trialEndsAt = p.trial_ends_at ? new Date(p.trial_ends_at) : null;
     const subEndsAt = p.subscription_ends_at ? new Date(p.subscription_ends_at) : null;
-    const graceEndsAt = p.grace_period_ends_at ? new Date(p.grace_period_ends_at) : null;
     const frozenAt = p.frozen_at ? new Date(p.frozen_at) : null;
+
+    // التصنيف
+    const classification = getClassification(branchCount, batchCount);
 
     let statusHtml = '';
     let daysText = '—';
@@ -307,16 +328,22 @@ function renderPharmacies() {
     return `<tr class="border-b border-slate-700 hover:bg-slate-800/50">
       <td class="p-3 text-slate-500">${i + 1}</td>
       <td class="p-3 font-bold text-teal-400">${esc(p.name)}</td>
-      <td class="p-3 text-center font-bold">${count}</td>
-      <td class="p-3 text-center font-bold text-yellow-400">${value.toFixed(0)} ج.م</td>
+      <td class="p-3 text-center font-bold">${batchCount}</td>
+      <td class="p-3 text-center font-bold text-purple-400">${branchCount}</td>
+      <td class="p-3 text-center font-bold text-yellow-400">${value.toFixed(0)}</td>
+      <td class="p-3 text-center">
+        <span class="${classification.color} px-2 py-1 rounded-lg text-xs font-bold">
+          ${classification.icon} ${classification.label}
+        </span>
+      </td>
       <td class="p-3 text-center">${statusHtml}</td>
       <td class="p-3 text-center text-xs text-slate-400">${daysText}</td>
       <td class="p-3 text-center">
         <div class="flex gap-1 justify-center flex-wrap">
-          <button onclick="activateMonth('${p.user_id}')" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">💳 تفعيل شهر</button>
-          <button onclick="extendTrial14('${p.user_id}')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold">⏰ +14 يوم</button>
-          <button onclick="freezeAccount('${p.user_id}')" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1 rounded text-xs font-bold">🧊 تجميد</button>
-          <button onclick="unfreezeAccount('${p.user_id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">🔥 فك</button>
+          <button onclick="activateMonth('${p.user_id}')" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs font-bold" title="تفعيل شهر">💳</button>
+          <button onclick="extendTrial14('${p.user_id}')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold" title="تمديد 14 يوم">⏰</button>
+          <button onclick="freezeAccount('${p.user_id}')" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1 rounded text-xs font-bold" title="تجميد">🧊</button>
+          <button onclick="unfreezeAccount('${p.user_id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold" title="فك التجميد">🔥</button>
         </div>
       </td>
     </tr>`;
@@ -341,7 +368,7 @@ async function activateMonth(userId) {
     frozen_at: null
   }).eq('user_id', userId);
 
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
   await loadData();
   alert('✅ تم التفعيل لمدة شهر!');
 }
@@ -362,7 +389,7 @@ async function extendTrial14(userId) {
     frozen_at: null
   }).eq('user_id', userId);
 
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
   await loadData();
   alert('✅ تم تمديد التجربة 14 يومًا!');
 }
@@ -373,7 +400,7 @@ async function freezeAccount(userId) {
     subscription_status: 'frozen',
     frozen_at: new Date().toISOString()
   }).eq('user_id', userId);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
   await loadData();
   alert('🧊 تم التجميد!');
 }
@@ -390,7 +417,7 @@ async function unfreezeAccount(userId) {
     grace_period_ends_at: graceEnd.toISOString(),
     frozen_at: null
   }).eq('user_id', userId);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
   await loadData();
   alert('🔥 تم فك التجميد!');
 }
