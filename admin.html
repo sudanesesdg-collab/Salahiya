@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم صلاحية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  tailwind.config = { theme: { extend: { fontFamily: { sans: ['Cairo', 'sans-serif'] } } } }
+</script>
+<style>
+  body { font-family: 'Cairo', sans-serif; background: #0a0f1c; color: #f1f5f9; min-height: 100vh; }
+  .glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .spinner {
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: #14b8a6;
+    border-radius: 50%;
+    width: 48px; height: 48px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
+  <div class="text-center">
+    <div class="spinner mx-auto mb-4"></div>
+    <p class="text-slate-400">جاري التحميل...</p>
+  </div>
+</div>
+
+<!-- Login -->
+<div id="login-screen" class="hidden min-h-screen items-center justify-center p-4">
+  <div class="glass rounded-3xl max-w-md w-full p-8">
+    <div class="text-center mb-6">
+      <div class="text-5xl mb-3">👑</div>
+      <h1 class="text-2xl font-black gradient-text">لوحة تحكم صلاحية</h1>
+      <p class="text-sm text-slate-400 mt-1">للمؤسس فقط</p>
+    </div>
+    <form onsubmit="handleLogin(event)" class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">البريد الإلكتروني</label>
+        <input type="email" required id="email" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-white">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">كلمة السر</label>
+        <input type="password" required id="password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-white">
+      </div>
+      <div id="error" class="hidden bg-red-900/20 border-r-4 border-red-500 p-3 rounded-xl text-sm text-red-300"></div>
+      <button type="submit" id="btn" class="w-full bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white py-3 rounded-xl font-bold transition">
+        دخول
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="hidden">
+  <header class="glass sticky top-0 z-40 border-b border-slate-700/50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg">
+          <span class="text-xl">👑</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-black gradient-text">لوحة تحكم صلاحية</h1>
+          <p class="text-xs text-slate-400">إدارة كل الصيدليات المشتركة</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="loadData()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl text-sm font-bold border border-slate-700 text-white">🔄 تحديث</button>
+        <button onclick="handleLogout()" class="bg-red-900/30 hover:bg-red-900/50 text-red-300 px-4 py-2 rounded-xl text-sm font-bold border border-red-900/50">🚪 خروج</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <section class="max-w-7xl mx-auto p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-slate-400 font-bold mb-1">الصيدليات</div>
+      <div id="s-pharmacies" class="text-3xl font-black text-teal-400">0</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-slate-400 font-bold mb-1">الأدوية</div>
+      <div id="s-batches" class="text-3xl font-black text-cyan-400">0</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-slate-400 font-bold mb-1">قيمة المخزون</div>
+      <div id="s-value" class="text-3xl font-black text-yellow-400">0</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-slate-400 font-bold mb-1">مسجّلون هذا الأسبوع</div>
+      <div id="s-week" class="text-3xl font-black text-green-400">0</div>
+    </div>
+    <div class="glass rounded-2xl p-5 border-r-4 border-red-500">
+      <div class="text-xs text-slate-400 font-bold mb-1">منتهية/مجمّدة</div>
+      <div id="s-expired" class="text-3xl font-black text-red-400">0</div>
+    </div>
+  </section>
+
+  <!-- Search -->
+  <section class="max-w-7xl mx-auto px-4 mt-2">
+    <input id="search" oninput="renderPharmacies()" placeholder="🔍 ابحث باسم الصيدلية..." class="w-full glass border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none text-white bg-slate-800">
+  </section>
+
+  <!-- Table -->
+  <section class="max-w-7xl mx-auto p-4">
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-lg font-black mb-4">📋 قائمة الصيدليات</h2>
+      <div class="overflow-x-auto rounded-xl border border-slate-700">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-800">
+            <tr>
+              <th class="p-3 text-right font-bold">#</th>
+              <th class="p-3 text-right font-bold">الصيدلية</th>
+              <th class="p-3 text-center font-bold">الأدوية</th>
+              <th class="p-3 text-center font-bold">القيمة</th>
+              <th class="p-3 text-center font-bold">الحالة</th>
+              <th class="p-3 text-center font-bold">المتبقي</th>
+              <th class="p-3 text-center font-bold">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ============================================================
+// Supabase
+// ============================================================
+const SUPABASE_URL = 'https://ddrenlliisixszphawjn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkcmVubGxpaXNpeHN6cGhhd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MTY4NjEsImV4cCI6MjEwNTA5Mjg2MX0.8iaWKeFvhbDMGNkitCYjaYu1MXZJAJa9lIZ_guS0hs8';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allPharmacies = [];
+let allBatches = [];
+
+// ============================================================
+// Helpers
+// ============================================================
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+// Auth
+// ============================================================
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('error');
+  err.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value
+  });
+  if (error) {
+    err.textContent = 'البريد أو كلمة السر غير صحيحة.';
+    err.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'دخول';
+    return;
+  }
+
+  // التحقق من صلاحيات الأدمن
+  const { data: adminData, error: adminErr } = await supabaseClient.from('admin_users').select('user_id').maybeSingle();
+  if (adminErr || !adminData) {
+    await supabaseClient.auth.signOut();
+    err.textContent = 'هذا الحساب ليس لديه صلاحيات المؤسس.';
+    err.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'دخول';
+    return;
+  }
+
+  await showDashboard();
+}
+
+async function handleLogout() {
+  if (!confirm('هل تريد تسجيل الخروج؟')) return;
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+// ============================================================
+// Dashboard
+// ============================================================
+async function showDashboard() {
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('flex');
+  document.getElementById('dashboard').classList.remove('hidden');
+  await loadData();
+}
+
+async function loadData() {
+  const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('created_at', { ascending: false });
+  allPharmacies = pharmacies || [];
+
+  const { data: batches } = await supabaseClient.from('batches').select('*');
+  allBatches = batches || [];
+
+  renderStats();
+  renderPharmacies();
+}
+
+function renderStats() {
+  document.getElementById('s-pharmacies').textContent = allPharmacies.length;
+  document.getElementById('s-batches').textContent = allBatches.length;
+
+  const totalValue = allBatches.reduce((s, b) => s + (b.qty * Number(b.cost)), 0);
+  document.getElementById('s-value').textContent = totalValue.toFixed(0);
+
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = allPharmacies.filter(p => new Date(p.created_at).getTime() > weekAgo).length;
+  document.getElementById('s-week').textContent = thisWeek;
+
+  const now = new Date();
+  const expiredCount = allPharmacies.filter(p => {
+    const status = p.subscription_status || 'trial';
+    if (status === 'expired' || status === 'cancelled' || status === 'frozen') return true;
+    if (status === 'trial' && p.trial_ends_at && new Date(p.trial_ends_at) < now) return true;
+    if (status === 'active' && p.subscription_ends_at && new Date(p.subscription_ends_at) < now) return true;
+    return false;
+  }).length;
+  document.getElementById('s-expired').textContent = expiredCount;
+}
+
+function renderPharmacies() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  const filtered = allPharmacies.filter(p => (p.name || '').toLowerCase().includes(q));
+
+  const tb = document.getElementById('table-body');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500 p-8">لا توجد صيدليات.</td></tr>';
+    return;
+  }
+
+  const now = new Date();
+  tb.innerHTML = filtered.map((p, i) => {
+    const pharmacyBatches = allBatches.filter(b => b.user_id === p.user_id);
+    const count = pharmacyBatches.length;
+    const value = pharmacyBatches.reduce((s, b) => s + (b.qty * Number(b.cost)), 0);
+
+    const status = p.subscription_status || 'trial';
+    const trialEndsAt = p.trial_ends_at ? new Date(p.trial_ends_at) : null;
+    const subEndsAt = p.subscription_ends_at ? new Date(p.subscription_ends_at) : null;
+    const graceEndsAt = p.grace_period_ends_at ? new Date(p.grace_period_ends_at) : null;
+    const frozenAt = p.frozen_at ? new Date(p.frozen_at) : null;
+
+    let statusHtml = '';
+    let daysText = '—';
+
+    if (status === 'frozen' || (frozenAt && frozenAt <= now)) {
+      statusHtml = `<span class="bg-slate-500/30 text-slate-300 px-2 py-1 rounded-lg text-xs font-bold">🧊 مجمّد</span>`;
+      daysText = '—';
+    } else if (status === 'active' && subEndsAt) {
+      const d = Math.ceil((subEndsAt - now) / (1000*60*60*24));
+      if (d <= 0) {
+        statusHtml = `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-lg text-xs font-bold">🔴 منتهي</span>`;
+        daysText = 'انتهى';
+      } else if (d <= 7) {
+        statusHtml = `<span class="bg-orange-500/20 text-orange-400 px-2 py-1 rounded-lg text-xs font-bold">⚠️ ينتهي قريبًا</span>`;
+        daysText = `${d} يوم`;
+      } else {
+        statusHtml = `<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-lg text-xs font-bold">✅ نشط</span>`;
+        daysText = `${d} يوم`;
+      }
+    } else if (status === 'trial' && trialEndsAt) {
+      const d = Math.ceil((trialEndsAt - now) / (1000*60*60*24));
+      if (d <= 0) {
+        statusHtml = `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-lg text-xs font-bold">🔴 منتهي</span>`;
+        daysText = 'انتهت';
+      } else if (d <= 3) {
+        statusHtml = `<span class="bg-orange-500/20 text-orange-400 px-2 py-1 rounded-lg text-xs font-bold">⚠️ ${d} أيام</span>`;
+        daysText = `${d} يوم`;
+      } else {
+        statusHtml = `<span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-lg text-xs font-bold">🎁 تجربة</span>`;
+        daysText = `${d} يوم`;
+      }
+    } else {
+      statusHtml = `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-lg text-xs font-bold">🔴 منتهي</span>`;
+      daysText = '—';
+    }
+
+    return `<tr class="border-b border-slate-700 hover:bg-slate-800/50">
+      <td class="p-3 text-slate-500">${i + 1}</td>
+      <td class="p-3 font-bold text-teal-400">${esc(p.name)}</td>
+      <td class="p-3 text-center font-bold">${count}</td>
+      <td class="p-3 text-center font-bold text-yellow-400">${value.toFixed(0)} ج.م</td>
+      <td class="p-3 text-center">${statusHtml}</td>
+      <td class="p-3 text-center text-xs text-slate-400">${daysText}</td>
+      <td class="p-3 text-center">
+        <div class="flex gap-1 justify-center flex-wrap">
+          <button onclick="activateMonth('${p.user_id}')" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">💳 تفعيل شهر</button>
+          <button onclick="extendTrial14('${p.user_id}')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold">⏰ +14 يوم</button>
+          <button onclick="freezeAccount('${p.user_id}')" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1 rounded text-xs font-bold">🧊 تجميد</button>
+          <button onclick="unfreezeAccount('${p.user_id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">🔥 فك</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// Actions
+// ============================================================
+async function activateMonth(userId) {
+  if (!confirm('تفعيل الاشتراك لمدة شهر كامل؟')) return;
+  const now = new Date();
+  const endDate = new Date(now);
+  endDate.setMonth(endDate.getMonth() + 1);
+  const graceDate = new Date(endDate);
+  graceDate.setDate(graceDate.getDate() + 30);
+
+  const { error } = await supabaseClient.from('pharmacies').update({
+    subscription_status: 'active',
+    subscription_ends_at: endDate.toISOString(),
+    grace_period_ends_at: graceDate.toISOString(),
+    frozen_at: null
+  }).eq('user_id', userId);
+
+  if (error) { alert('خطأ: ' + error.message); return; }
+  await loadData();
+  alert('✅ تم التفعيل لمدة شهر!');
+}
+
+async function extendTrial14(userId) {
+  if (!confirm('تمديد التجربة المجانية 14 يومًا؟')) return;
+  const p = allPharmacies.find(x => x.user_id === userId);
+  if (!p) return;
+  const currentEnd = p.trial_ends_at ? new Date(p.trial_ends_at) : new Date();
+  const baseDate = currentEnd > new Date() ? currentEnd : new Date();
+  const newEnd = new Date(baseDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const graceDate = new Date(newEnd.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const { error } = await supabaseClient.from('pharmacies').update({
+    subscription_status: 'trial',
+    trial_ends_at: newEnd.toISOString(),
+    grace_period_ends_at: graceDate.toISOString(),
+    frozen_at: null
+  }).eq('user_id', userId);
+
+  if (error) { alert('خطأ: ' + error.message); return; }
+  await loadData();
+  alert('✅ تم تمديد التجربة 14 يومًا!');
+}
+
+async function freezeAccount(userId) {
+  if (!confirm('تجميد هذا الحساب فورًا؟')) return;
+  const { error } = await supabaseClient.from('pharmacies').update({
+    subscription_status: 'frozen',
+    frozen_at: new Date().toISOString()
+  }).eq('user_id', userId);
+  if (error) { alert('خطأ: ' + error.message); return; }
+  await loadData();
+  alert('🧊 تم التجميد!');
+}
+
+async function unfreezeAccount(userId) {
+  if (!confirm('فك التجميد وإعادة الحساب للتجربة 14 يومًا؟')) return;
+  const now = new Date();
+  const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const graceEnd = new Date(trialEnd.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const { error } = await supabaseClient.from('pharmacies').update({
+    subscription_status: 'trial',
+    trial_ends_at: trialEnd.toISOString(),
+    grace_period_ends_at: graceEnd.toISOString(),
+    frozen_at: null
+  }).eq('user_id', userId);
+  if (error) { alert('خطأ: ' + error.message); return; }
+  await loadData();
+  alert('🔥 تم فك التجميد!');
+}
+
+// ============================================================
+// Init
+// ============================================================
+async function init() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session?.user) {
+    const { data: adminData } = await supabaseClient.from('admin_users').select('user_id').maybeSingle();
+    if (adminData) { await showDashboard(); return; }
+    await supabaseClient.auth.signOut();
+  }
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-screen').classList.add('flex');
+}
+
+init();
+</script>
+</body>
+</html>
