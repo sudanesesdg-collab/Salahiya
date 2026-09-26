@@ -11,7 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // FingerprintJS - تحميل مبكر
   !function(){
     var e = function(){
       var t = document.createElement("script");
@@ -24,14 +23,9 @@
           try { localStorage.setItem('fp', r.visitorId); } catch(e) {}
         }).catch(function(err){ console.error('FP error:', err); });
       };
-      t.onerror = function(){ console.error('FP load error'); };
       document.head.appendChild(t);
     };
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(e);
-    } else {
-      setTimeout(e, 1);
-    }
+    if ("requestIdleCallback" in window) { requestIdleCallback(e); } else { setTimeout(e, 1); }
   }();
 </script>
 <script>
@@ -39,11 +33,7 @@
     theme: {
       extend: {
         fontFamily: { sans: ['Cairo', 'Inter', 'sans-serif'] },
-        animation: {
-          'float': 'float 6s ease-in-out infinite',
-          'fade-in': 'fadeIn 0.4s ease-out',
-          'slide-up': 'slideUp 0.5s ease-out'
-        },
+        animation: { 'float': 'float 6s ease-in-out infinite', 'fade-in': 'fadeIn 0.4s ease-out', 'slide-up': 'slideUp 0.5s ease-out' },
         keyframes: {
           float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
           slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
@@ -55,120 +45,31 @@
 </script>
 <style>
   body { font-family: 'Cairo', 'Inter', sans-serif; }
-
-  body {
-    background: 
-      radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.06) 0%, transparent 50%),
-      #f8fafc;
-    min-height: 100vh;
-    color: #0f172a;
-  }
-  body.dark {
-    background: 
-      radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.1) 0%, transparent 50%),
-      #0a0f1c;
-    color: #f1f5f9;
-  }
-
-  .glass {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  }
-  body.dark .glass {
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(51, 65, 85, 0.6);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  }
-
-  .gradient-text {
-    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #06b6d4 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  body.dark .gradient-text {
-    background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #22d3ee 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .btn-gradient {
-    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
-    color: white !important;
-  }
+  body { background: radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.06) 0%, transparent 50%), #f8fafc; min-height: 100vh; color: #0f172a; }
+  body.dark { background: radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.15) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.1) 0%, transparent 50%), #0a0f1c; color: #f1f5f9; }
+  .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06); }
+  body.dark .glass { background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(51, 65, 85, 0.6); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); }
+  .gradient-text { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  body.dark .gradient-text { background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 50%, #22d3ee 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .btn-gradient { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3); color: white !important; }
   .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4); }
-  .btn-gradient:active { transform: translateY(0); }
-
-  .tab-active {
-    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
-    color: white !important;
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
-  }
-
+  .tab-active { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); color: white !important; box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3); }
   .stat-card { position: relative; overflow: hidden; }
-  .stat-card::before {
-    content: ''; position: absolute; top: 0; right: 0;
-    width: 4px; height: 100%; background: var(--accent-color, #0d9488);
-  }
-
+  .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent-color, #0d9488); }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   body.dark ::-webkit-scrollbar-thumb { background: #475569; }
-
-  .drop-zone {
-    transition: all 0.3s ease;
-    background: linear-gradient(135deg, rgba(13,148,136,0.03) 0%, rgba(20,184,166,0.06) 100%);
-    border-color: #cbd5e1;
-  }
-  body.dark .drop-zone {
-    background: linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(20,184,166,0.12) 100%);
-    border-color: #475569;
-  }
-  .drop-zone.dragover {
-    background: linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(20,184,166,0.18) 100%);
-    border-color: #0d9488;
-    transform: scale(1.01);
-  }
-
-  .spinner {
-    border: 3px solid rgba(255,255,255,0.2);
-    border-top-color: white;
-    border-radius: 50%;
-    width: 48px; height: 48px;
-    animation: spin 0.8s linear infinite;
-  }
+  .drop-zone { transition: all 0.3s ease; background: linear-gradient(135deg, rgba(13,148,136,0.03) 0%, rgba(20,184,166,0.06) 100%); border-color: #cbd5e1; }
+  body.dark .drop-zone { background: linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(20,184,166,0.12) 100%); border-color: #475569; }
+  .drop-zone.dragover { background: linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(20,184,166,0.18) 100%); border-color: #0d9488; transform: scale(1.01); }
+  .spinner { border: 3px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; width: 48px; height: 48px; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  input, select, textarea {
-    transition: all 0.2s ease;
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-color: #cbd5e1 !important;
-  }
-  input::placeholder, textarea::placeholder {
-    color: #94a3b8 !important;
-    opacity: 1 !important;
-  }
-  body.dark input, body.dark select, body.dark textarea {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-    border-color: #475569 !important;
-  }
-  body.dark input::placeholder, body.dark textarea::placeholder {
-    color: #64748b !important;
-    opacity: 1 !important;
-  }
+  input, select, textarea { transition: all 0.2s ease; background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+  input::placeholder, textarea::placeholder { color: #94a3b8 !important; opacity: 1 !important; }
+  body.dark input, body.dark select, body.dark textarea { background-color: #1e293b !important; color: #f1f5f9 !important; border-color: #475569 !important; }
+  body.dark input::placeholder, body.dark textarea::placeholder { color: #64748b !important; opacity: 1 !important; }
   body.dark select option { background: #1e293b; color: #f1f5f9; }
-
   table thead { background: #f1f5f9; }
   table thead th { color: #334155; font-weight: 700; }
   table tbody td { color: #1e293b; }
@@ -178,15 +79,7 @@
   body.dark table tbody td { color: #e2e8f0; }
   body.dark table tbody tr { border-color: #334155 !important; }
   body.dark table tbody tr:hover { background: rgba(51, 65, 85, 0.4) !important; }
-
-  .alert-card {
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border-right-width: 4px;
-    border-right-style: solid;
-    transition: transform 0.2s;
-  }
+  .alert-card { border-radius: 12px; padding: 16px; margin-bottom: 12px; border-right-width: 4px; border-right-style: solid; transition: transform 0.2s; }
   .alert-card:hover { transform: scale(1.005); }
   .alert-critical { background: #fef2f2; border-right-color: #ef4444; }
   .alert-critical .alert-name { color: #7f1d1d; }
@@ -204,7 +97,6 @@
   .alert-expired .alert-name { color: #7f1d1d; }
   .alert-expired .alert-meta { color: #991b1b; }
   .alert-expired .alert-days { color: #7f1d1d; }
-
   body.dark .alert-critical { background: rgba(127, 29, 29, 0.35); border-right-color: #ef4444; }
   body.dark .alert-critical .alert-name { color: #fecaca; }
   body.dark .alert-critical .alert-meta { color: #fca5a5; }
@@ -221,28 +113,13 @@
   body.dark .alert-expired .alert-name { color: #fecaca; }
   body.dark .alert-expired .alert-meta { color: #fca5a5; }
   body.dark .alert-expired .alert-days { color: #fecaca; }
-
-  .badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 700;
-  }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; }
   .badge-critical { background: #ef4444; color: #ffffff; }
   .badge-warning { background: #f97316; color: #ffffff; }
   .badge-watch { background: #eab308; color: #1e293b; }
   .badge-ok { background: #22c55e; color: #ffffff; }
   .badge-expired { background: #b91c1c; color: #ffffff; }
-
-  #report-preview {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    overflow-x: auto;
-  }
+  #report-preview { background: #ffffff !important; color: #0f172a !important; border-radius: 16px; padding: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); overflow-x: auto; }
   #report-preview * { color: #0f172a; }
   #report-preview h1, #report-preview h2 { color: #0d9488 !important; }
   #report-preview table { color: #0f172a !important; width: 100%; table-layout: fixed; font-size: 11px; }
@@ -250,55 +127,18 @@
   #report-preview table thead th { color: #ffffff !important; padding: 6px 4px !important; word-wrap: break-word; text-align: center !important; }
   #report-preview table tbody td { color: #0f172a !important; padding: 6px 4px !important; word-wrap: break-word; text-align: center !important; }
   #report-preview table th:nth-child(2), #report-preview table td:nth-child(2) { text-align: right !important; }
-
   html { scroll-behavior: smooth; }
   body { overflow-x: hidden; }
   #view-report { min-height: auto; }
-
   .animate-fade-in { animation: fadeIn 0.4s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .animate-float { animation: float 4s ease-in-out infinite; }
-
-  .lock-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(20px);
-    overflow-y: auto;
-  }
-  .lock-card {
-    background: white;
-    border-radius: 24px;
-    padding: 40px;
-    max-width: 540px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.5s ease-out;
-  }
+  .lock-screen { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); overflow-y: auto; }
+  .lock-card { background: white; border-radius: 24px; padding: 40px; max-width: 540px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.5s ease-out; }
   body.dark .lock-card { background: #1e293b; color: #f1f5f9; }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .status-banner {
-    padding: 10px 18px;
-    border-radius: 14px;
-    font-size: 13px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    justify-content: center;
-  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .status-banner { padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center; }
   .status-trial { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
   body.dark .status-trial { background: rgba(146, 64, 14, 0.3); color: #fcd34d; border-color: rgba(252, 211, 77, 0.3); }
   .status-trial-urgent { background: #fed7aa; color: #9a3412; border: 1px solid #fb923c; animation: pulse 2s infinite; }
@@ -307,32 +147,10 @@
   body.dark .status-active { background: rgba(22, 101, 52, 0.3); color: #86efac; border-color: rgba(134, 239, 172, 0.3); }
   .status-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
   body.dark .status-expired { background: rgba(153, 27, 27, 0.3); color: #fca5a5; border-color: rgba(252, 165, 165, 0.3); }
-
-  .upgrade-btn {
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, #f59e0b, #f97316);
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
-    transition: all 0.3s;
-  }
+  .upgrade-btn { padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; color: white; background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); transition: all 0.3s; }
   .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5); }
-
-  @media (max-width: 640px) {
-    #report-preview table { font-size: 9px; }
-    #report-preview table th, #report-preview table td { padding: 4px 2px !important; }
-    #report-preview { padding: 12px !important; }
-  }
-
-  @media print {
-    .no-print { display: none !important; }
-    body { background: white !important; color: #000 !important; }
-    .glass { background: white !important; border: none !important; box-shadow: none !important; }
-    #report-preview { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
-    #view-report { padding: 0 !important; margin: 0 !important; }
-  }
+  @media (max-width: 640px) { #report-preview table { font-size: 9px; } #report-preview table th, #report-preview table td { padding: 4px 2px !important; } #report-preview { padding: 12px !important; } }
+  @media print { .no-print { display: none !important; } body { background: white !important; color: #000 !important; } .glass { background: white !important; border: none !important; box-shadow: none !important; } #report-preview { padding: 0 !important; margin: 0 !important; box-shadow: none !important; } #view-report { padding: 0 !important; margin: 0 !important; } }
 </style>
 </head>
 <body>
@@ -399,6 +217,33 @@
       <button type="submit" id="signup-btn" class="btn-gradient w-full py-3 rounded-xl font-bold">ابدأ تجربة 3 أيام مجانًا</button>
       <p class="text-center text-sm text-slate-500">لديك حساب بالفعل؟ <a href="#" onclick="switchAuthTab('login')" class="text-teal-600 font-bold hover:underline">سجّل دخولك</a></p>
     </form>
+  </div>
+</div>
+
+<!-- Email Verification Screen -->
+<div id="email-verify-screen" class="hidden min-h-screen items-center justify-center p-4" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+  <div class="glass rounded-3xl max-w-md w-full p-8 md:p-10 text-center">
+    <div class="text-7xl mb-6 animate-float">📧</div>
+    <h1 class="text-3xl font-black gradient-text mb-3">تحقق من بريدك</h1>
+    <p class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+      أرسلنا رابط تأكيد إلى بريدك الإلكتروني:
+    </p>
+    <div class="bg-teal-50 dark:bg-teal-900/30 rounded-2xl p-4 mb-6">
+      <div class="font-black text-teal-700 dark:text-teal-300 break-all" id="verify-email-display">—</div>
+    </div>
+    <div class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+      افتح بريدك، واضغط على الرابط لتأكيد حسابك.
+    </div>
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-2xl p-4 text-xs text-yellow-800 dark:text-yellow-200 mb-6">
+      💡 <b>لم تجد الرسالة؟</b><br>
+      تحقق من مجلد "البريد المزعج" (Spam).
+    </div>
+    <button onclick="resendVerification()" class="btn-gradient w-full py-3 rounded-xl font-bold mb-3">
+      📩 إعادة إرسال البريد
+    </button>
+    <button onclick="cancelVerification()" class="text-slate-500 hover:text-slate-700 text-sm font-bold">
+      العودة لتسجيل الدخول
+    </button>
   </div>
 </div>
 
@@ -732,7 +577,6 @@
     <div class="text-6xl mb-4" id="lock-icon">🔒</div>
     <h2 id="lock-title" class="text-3xl font-black mb-3 text-slate-800 dark:text-white">انتهت تجربتك</h2>
     <p id="lock-message" class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">...</p>
-    
     <div class="bg-teal-50 dark:bg-teal-900/30 rounded-2xl p-5 mb-6 text-right">
       <div class="font-black text-teal-800 dark:text-teal-300 mb-3">✨ اشترك للحصول على:</div>
       <ul class="space-y-2 text-sm text-teal-700 dark:text-teal-400">
@@ -743,25 +587,13 @@
         <li class="flex items-center gap-2"><span>✅</span> دعم مباشر على واتساب</li>
       </ul>
     </div>
-
-    <a id="lock-subscribe-btn" href="#" target="_blank" class="btn-gradient text-white px-6 py-4 rounded-2xl font-black w-full block mb-3">
-      🚀 اشترك الآن — 300 ج.م/شهر
-    </a>
-    
-    <a href="https://wa.me/201505133736?text=مرحبًا،%20أريد%20الاستفسار" target="_blank" class="block text-center text-teal-600 hover:text-teal-800 font-bold text-sm mb-3">
-      💬 تحدث مع فريق الدعم
-    </a>
-
-    <button onclick="handleLogout()" class="text-slate-400 hover:text-slate-600 text-xs font-bold">
-      تسجيل الخروج
-    </button>
+    <a id="lock-subscribe-btn" href="#" target="_blank" class="btn-gradient text-white px-6 py-4 rounded-2xl font-black w-full block mb-3">🚀 اشترك الآن — 300 ج.م/شهر</a>
+    <a href="https://wa.me/201505133736?text=مرحبًا،%20أريد%20الاستفسار" target="_blank" class="block text-center text-teal-600 hover:text-teal-800 font-bold text-sm mb-3">💬 تحدث مع فريق الدعم</a>
+    <button onclick="handleLogout()" class="text-slate-400 hover:text-slate-600 text-xs font-bold">تسجيل الخروج</button>
   </div>
 </div>
 
 <script>
-// ============================================================
-// Supabase
-// ============================================================
 const SUPABASE_URL = 'https://ddrenlliisixszphawjn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkcmVubGxpaXNpeHN6cGhhd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MTY4NjEsImV4cCI6MjEwNTA5Mjg2MX0.8iaWKeFvhbDMGNkitCYjaYu1MXZJAJa9lIZ_guS0hs8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -773,6 +605,7 @@ let branchesCache = [];
 let currentBranchFilter = 'all';
 let isAccountLocked = false;
 let isFrozen = false;
+let pendingVerificationEmail = '';
 
 function daysUntilExpiry(d) {
   if (!d) return 9999;
@@ -810,9 +643,7 @@ function toggleDark() {
     : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 }
 
-if (localStorage.getItem('darkMode') === '1') {
-  document.body.classList.add('dark');
-}
+if (localStorage.getItem('darkMode') === '1') { document.body.classList.add('dark'); }
 
 function switchAuthTab(tab) {
   ['login','signup'].forEach(t => {
@@ -847,9 +678,10 @@ async function handleSignup(e) {
   const btn = document.getElementById('signup-btn');
   btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
   try {
+    const email = document.getElementById('signup-email').value.trim();
     const fingerprint = window.__fingerprint || localStorage.getItem('fp') || 'unknown';
     const { data, error } = await supabaseClient.auth.signUp({
-      email: document.getElementById('signup-email').value.trim(),
+      email: email,
       password: document.getElementById('signup-password').value,
       options: { 
         data: { 
@@ -859,13 +691,22 @@ async function handleSignup(e) {
       }
     });
     if (error) { showError('signup-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; return; }
+    
+    if (data.user && !data.session) {
+      // يحتاج تأكيد البريد
+      pendingVerificationEmail = email;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('flex');
+      document.getElementById('email-verify-screen').classList.remove('hidden');
+      document.getElementById('email-verify-screen').classList.add('flex');
+      document.getElementById('verify-email-display').textContent = email;
+      btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
+      return;
+    }
+    
     if (data.session) {
       await saveFingerprint(data.user.id, fingerprint);
       return;
-    }
-    if (data.user && !data.session) {
-      alert('✅ تم إنشاء حسابك!\nلكن "تأكيد البريد" مفعّل. عطّله من Supabase ثم أعد المحاولة.');
-      btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
     }
   } catch (err) {
     showError('signup-error', 'خطأ: ' + err.message);
@@ -875,14 +716,31 @@ async function handleSignup(e) {
 
 async function saveFingerprint(userId, fingerprint) {
   try {
-    const { error } = await supabaseClient
-      .from('pharmacies')
-      .update({ device_fingerprint: fingerprint })
-      .eq('user_id', userId);
+    const { error } = await supabaseClient.from('pharmacies').update({ device_fingerprint: fingerprint }).eq('user_id', userId);
     if (error) console.error('Fingerprint save error:', error);
-  } catch (err) {
-    console.error('saveFingerprint:', err);
+  } catch (err) { console.error('saveFingerprint:', err); }
+}
+
+async function resendVerification() {
+  if (!pendingVerificationEmail) {
+    alert('يرجى العودة لصفحة التسجيل.');
+    return;
   }
+  const { error } = await supabaseClient.auth.resend({
+    type: 'signup',
+    email: pendingVerificationEmail
+  });
+  if (error) { alert('خطأ: ' + error.message); return; }
+  alert('✅ تم إعادة إرسال البريد. تحقق من صندوق الوارد.');
+}
+
+function cancelVerification() {
+  document.getElementById('email-verify-screen').classList.add('hidden');
+  document.getElementById('email-verify-screen').classList.remove('flex');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('auth-screen').classList.add('flex');
+  switchAuthTab('login');
+  pendingVerificationEmail = '';
 }
 
 async function handleLogout() {
@@ -894,7 +752,7 @@ async function handleLogout() {
 function translateAuthError(msg) {
   const map = {
     'Invalid login credentials': 'البريد أو كلمة السر غير صحيحة.',
-    'Email not confirmed': 'يجب تأكيد البريد أولًا.',
+    'Email not confirmed': 'يجب تأكيد البريد أولًا. تحقق من إيميلك.',
     'User already registered': 'هذا البريد مسجّل مسبقًا.',
     'Password should be at least 6 characters': 'كلمة السر 6 أحرف على الأقل.'
   };
@@ -926,8 +784,7 @@ async function loadBatches() {
 function updateBranchSelectors() {
   const gf = document.getElementById('global-branch-filter');
   if (gf) {
-    gf.innerHTML = '<option value="all">كل الفروع</option>' +
-      branchesCache.map(b => `<option value="${b.id}"${currentBranchFilter === b.id ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
+    gf.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${currentBranchFilter === b.id ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
     document.getElementById('branch-filter-bar').classList.toggle('hidden', branchesCache.length <= 1);
   }
   const fb = document.getElementById('f-branch');
@@ -990,10 +847,7 @@ function renderBranchesList() {
   const countEl = document.getElementById('branches-count');
   if (!list) return;
   countEl.textContent = branchesCache.length;
-  if (!branchesCache.length) {
-    list.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد فروع.</p>';
-    return;
-  }
+  if (!branchesCache.length) { list.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد فروع.</p>'; return; }
   list.innerHTML = branchesCache.map(b => {
     const branchBatches = batchesCache.filter(x => x.branch_id === b.id);
     const count = branchBatches.length;
@@ -1019,10 +873,7 @@ function renderBranchesList() {
 
 async function addMedicine(e) {
   e.preventDefault();
-  if (isAccountLocked) {
-    alert('⚠️ حسابك مقفل. جدّد اشتراكك للاستمرار في إضافة الأدوية.');
-    return;
-  }
+  if (isAccountLocked) { alert('⚠️ حسابك مقفل. جدّد اشتراكك للاستمرار في إضافة الأدوية.'); return; }
   const branchId = document.getElementById('f-branch').value;
   if (!branchId) { alert('اختر الفرع أولًا.'); return; }
   const newBatch = {
@@ -1065,14 +916,9 @@ function renderStats() {
 }
 
 function renderAlerts() {
-  const e = getFilteredBatches().filter(b => b.qty > 0)
-    .map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) }))
-    .filter(b => b.days <= 90).sort((a,b) => a.days - b.days);
+  const e = getFilteredBatches().filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) })).filter(b => b.days <= 90).sort((a,b) => a.days - b.days);
   const c = document.getElementById('alerts-container');
-  if (!e.length) {
-    c.innerHTML = '<div class="text-center py-12"><div class="text-6xl mb-4">✅</div><p class="text-slate-500 font-bold">لا توجد أدوية تنتهي خلال 90 يومًا.</p></div>';
-    return;
-  }
+  if (!e.length) { c.innerHTML = '<div class="text-center py-12"><div class="text-6xl mb-4">✅</div><p class="text-slate-500 font-bold">لا توجد أدوية تنتهي خلال 90 يومًا.</p></div>'; return; }
   c.innerHTML = e.map(b => {
     let cls, badgeCls, badgeLabel;
     if (b.days < 0) { cls = 'alert-expired'; badgeCls = 'badge-expired'; badgeLabel = 'منتهي'; }
@@ -1098,8 +944,7 @@ function renderAlerts() {
 
 function renderInventory() {
   const s = (document.getElementById('search-input')?.value || '').toLowerCase();
-  const b = getFilteredBatches().filter(x => x.name.toLowerCase().includes(s) || (x.batch||'').toLowerCase().includes(s))
-    .sort((a,c) => daysUntilExpiry(a.expiry) - daysUntilExpiry(c.expiry));
+  const b = getFilteredBatches().filter(x => x.name.toLowerCase().includes(s) || (x.batch||'').toLowerCase().includes(s)).sort((a,c) => daysUntilExpiry(a.expiry) - daysUntilExpiry(c.expiry));
   const tb = document.getElementById('inventory-body');
   if (!b.length) { tb.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 p-8">لا توجد دفعات.</td></tr>'; return; }
   const showBranch = branchesCache.length > 1;
@@ -1211,8 +1056,7 @@ function applyPharmacyToUI() {
 function refreshSuppliers() {
   const sups = [...new Set(getFilteredBatches().map(b => b.supplier).filter(Boolean))];
   const cur = document.getElementById('p-supplier').value;
-  document.getElementById('p-supplier').innerHTML = '<option value="">كل الموردين</option>' +
-    sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  document.getElementById('p-supplier').innerHTML = '<option value="">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
   buildReport();
 }
 
@@ -1222,18 +1066,14 @@ function buildReport() {
   const pBranch = document.getElementById('p-branch').value;
   const settings = currentPharmacy || {};
   const pharmacy = settings.name || 'صيدلية';
-
   let source = batchesCache;
   if (pBranch !== 'all') source = source.filter(b => b.branch_id === pBranch);
-
   let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) }));
   list = list.filter(b => b.days <= range);
   if (sup) list = list.filter(b => b.supplier === sup);
   list.sort((a,b) => a.days - b.days);
-
   const preview = document.getElementById('report-preview');
   if (!list.length) { preview.innerHTML = '<p class="text-center text-slate-500 py-12">لا توجد أدوية مطابقة.</p>'; return; }
-
   const totalQty = list.reduce((s, b) => s + b.qty, 0);
   const totalVal = list.reduce((s, b) => s + b.qty * b.cost, 0);
   const rangeLabel = range === 9999 ? 'كل الأدوية' : `تنتهي خلال ${range} يوم`;
@@ -1243,9 +1083,7 @@ function buildReport() {
   const logoHtml = settings.logo_url ? `<img src="${settings.logo_url}" style="width:80px; height:80px; object-fit:contain; border-radius:12px;">` : '';
   const contactLine = [settings.phone ? '📞 ' + settings.phone : '', settings.address, settings.license ? 'ترخيص: ' + settings.license : ''].filter(Boolean).join(' • ');
   const showBranchCol = branchesCache.length > 1;
-
-  let html = `
-    <div style="text-align:center; padding-bottom:15px; border-bottom:3px solid #0d9488; margin-bottom:20px;">
+  let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:3px solid #0d9488; margin-bottom:20px;">
       ${logoHtml ? `<div style="margin-bottom:10px;">${logoHtml}</div>` : ''}
       <h1 style="font-size:26px; font-weight:900; color:#0d9488; margin:0;">${esc(pharmacy)}</h1>
       ${contactLine ? `<p style="font-size:12px; color:#555; margin:6px 0 0 0;">${esc(contactLine)}</p>` : ''}
@@ -1505,107 +1343,45 @@ function evaluateSubscription() {
   const subEndsAt = currentPharmacy.subscription_ends_at ? new Date(currentPharmacy.subscription_ends_at) : null;
   const graceEndsAt = currentPharmacy.grace_period_ends_at ? new Date(currentPharmacy.grace_period_ends_at) : null;
   const frozenAt = currentPharmacy.frozen_at ? new Date(currentPharmacy.frozen_at) : null;
-
   const banner = document.getElementById('status-banner');
   const bannerContainer = document.getElementById('status-banner-container');
   const upgradeContainer = document.getElementById('upgrade-btn-container');
   const upgradeBtn = document.getElementById('upgrade-btn');
-
   const pharmacyName = currentPharmacy.name || 'صيدليتي';
   const email = currentUser?.email || '';
-  function buildWa(action) {
-    return `https://wa.me/201505133736?text=${encodeURIComponent(`مرحبًا،\nأنا ${pharmacyName}.\n${action}\nبريدي: ${email}`)}`;
-  }
-
-  if (status === 'frozen' || (frozenAt && frozenAt <= now)) {
-    isFrozen = true; isAccountLocked = true;
-    showLockScreen({
-      icon: '🧊',
-      title: 'حسابك مجمّد',
-      message: 'انتهت فترة السماح. <b>بياناتك محفوظة بأمان</b>.<br><br>جدّد لاستعادة كل شيء فورًا.',
-      buttonText: '🚀 استعد حسابك — 300 ج.م/شهر',
-      waText: buildWa('أريد تجديد الاشتراك لاستعادة حسابي.')
-    });
-    return;
-  }
-
+  function buildWa(action) { return `https://wa.me/201505133736?text=${encodeURIComponent(`مرحبًا،\nأنا ${pharmacyName}.\n${action}\nبريدي: ${email}`)}`; }
+  if (status === 'frozen' || (frozenAt && frozenAt <= now)) { isFrozen = true; isAccountLocked = true; showLockScreen({ icon: '🧊', title: 'حسابك مجمّد', message: 'انتهت فترة السماح. <b>بياناتك محفوظة بأمان</b>.<br><br>جدّد لاستعادة كل شيء فورًا.', buttonText: '🚀 استعد حسابك — 300 ج.م/شهر', waText: buildWa('أريد تجديد الاشتراك لاستعادة حسابي.') }); return; }
   if (status === 'active') {
     if (subEndsAt && subEndsAt <= now) { handleExpired(subEndsAt); return; }
     isAccountLocked = false; isFrozen = false;
     bannerContainer.classList.remove('hidden');
     const d = subEndsAt ? Math.ceil((subEndsAt - now) / (1000*60*60*24)) : null;
-    if (d !== null && d <= 7) {
-      banner.className = 'status-banner status-trial-urgent';
-      banner.innerHTML = `⏰ اشتراكك سينتهي خلال ${d} يوم`;
-      upgradeContainer.classList.remove('hidden');
-      upgradeBtn.href = buildWa('أريد تجديد اشتراكي.');
-    } else if (d !== null) {
-      banner.className = 'status-banner status-active';
-      banner.innerHTML = `✅ اشتراك نشط — متبقي ${d} يوم`;
-      upgradeContainer.classList.add('hidden');
-    } else {
-      banner.className = 'status-banner status-active';
-      banner.innerHTML = `✅ اشتراك نشط`;
-      upgradeContainer.classList.add('hidden');
-    }
+    if (d !== null && d <= 7) { banner.className = 'status-banner status-trial-urgent'; banner.innerHTML = `⏰ اشتراكك سينتهي خلال ${d} يوم`; upgradeContainer.classList.remove('hidden'); upgradeBtn.href = buildWa('أريد تجديد اشتراكي.'); }
+    else if (d !== null) { banner.className = 'status-banner status-active'; banner.innerHTML = `✅ اشتراك نشط — متبقي ${d} يوم`; upgradeContainer.classList.add('hidden'); }
+    else { banner.className = 'status-banner status-active'; banner.innerHTML = `✅ اشتراك نشط`; upgradeContainer.classList.add('hidden'); }
     return;
   }
-
   if (status === 'expired' || status === 'cancelled') { handleExpired(subEndsAt || trialEndsAt); return; }
-
   if (status === 'trial' && trialEndsAt) {
     const d = Math.ceil((trialEndsAt - now) / (1000*60*60*24));
     if (d <= 0) { handleExpired(trialEndsAt); return; }
     isAccountLocked = false; isFrozen = false;
     bannerContainer.classList.remove('hidden');
-    if (d <= 1) {
-      banner.className = 'status-banner status-trial-urgent';
-      banner.innerHTML = `⚠️ تجربة مجانية — متبقي ${d} يوم فقط!`;
-      upgradeContainer.classList.remove('hidden');
-      upgradeBtn.href = buildWa('أريد الاشتراك قبل انتهاء التجربة.');
-    } else if (d <= 2) {
-      banner.className = 'status-banner status-trial';
-      banner.innerHTML = `⏰ تجربة مجانية — متبقي ${d} يوم`;
-      upgradeContainer.classList.remove('hidden');
-      upgradeBtn.href = buildWa('أريد الاشتراك في خطة Starter.');
-    } else {
-      banner.className = 'status-banner status-trial';
-      banner.innerHTML = `🎁 تجربة مجانية — متبقي ${d} يوم`;
-      upgradeContainer.classList.add('hidden');
-    }
+    if (d <= 1) { banner.className = 'status-banner status-trial-urgent'; banner.innerHTML = `⚠️ تجربة مجانية — متبقي ${d} يوم فقط!`; upgradeContainer.classList.remove('hidden'); upgradeBtn.href = buildWa('أريد الاشتراك قبل انتهاء التجربة.'); }
+    else if (d <= 2) { banner.className = 'status-banner status-trial'; banner.innerHTML = `⏰ تجربة مجانية — متبقي ${d} يوم`; upgradeContainer.classList.remove('hidden'); upgradeBtn.href = buildWa('أريد الاشتراك في خطة Starter.'); }
+    else { banner.className = 'status-banner status-trial'; banner.innerHTML = `🎁 تجربة مجانية — متبقي ${d} يوم`; upgradeContainer.classList.add('hidden'); }
     return;
   }
-
   isAccountLocked = false; isFrozen = false;
 }
 
 function handleExpired(endsAt) {
   const now = new Date();
-  const graceEndsAt = currentPharmacy.grace_period_ends_at
-    ? new Date(currentPharmacy.grace_period_ends_at)
-    : (endsAt ? new Date(endsAt.getTime() + 30 * 24 * 60 * 60 * 1000) : null);
-
-  if (graceEndsAt && graceEndsAt <= now) {
-    isFrozen = true; isAccountLocked = true;
-    showLockScreen({
-      icon: '🧊',
-      title: 'حسابك مجمّد',
-      message: 'انتهت فترة السماح (30 يومًا). <b>بياناتك محفوظة</b> لكنها مخفية.<br><br>جدّد لاستعادة كل شيء.',
-      buttonText: '🚀 استعد حسابك — 300 ج.م/شهر',
-      waText: buildWa2('أريد تجديد الاشتراك لاستعادة حسابي.')
-    });
-    return;
-  }
-
+  const graceEndsAt = currentPharmacy.grace_period_ends_at ? new Date(currentPharmacy.grace_period_ends_at) : (endsAt ? new Date(endsAt.getTime() + 30 * 24 * 60 * 60 * 1000) : null);
+  if (graceEndsAt && graceEndsAt <= now) { isFrozen = true; isAccountLocked = true; showLockScreen({ icon: '🧊', title: 'حسابك مجمّد', message: 'انتهت فترة السماح (30 يومًا). <b>بياناتك محفوظة</b> لكنها مخفية.<br><br>جدّد لاستعادة كل شيء.', buttonText: '🚀 استعد حسابك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك لاستعادة حسابي.') }); return; }
   isAccountLocked = true; isFrozen = false;
   const daysLeft = graceEndsAt ? Math.ceil((graceEndsAt - now) / (1000*60*60*24)) : 30;
-  showLockScreen({
-    icon: '🔒',
-    title: 'انتهى اشتراكك',
-    message: `<b>بياناتك محفوظة بأمان.</b><br><br>جدّد الآن للاستمرار الكامل.<br><br><small>لديك ${daysLeft} يوم قبل أن يُجمّد حسابك.</small>`,
-    buttonText: '🔄 جدّد الاشتراك — 300 ج.م/شهر',
-    waText: buildWa2('أريد تجديد الاشتراك.')
-  });
+  showLockScreen({ icon: '🔒', title: 'انتهى اشتراكك', message: `<b>بياناتك محفوظة بأمان.</b><br><br>جدّد الآن للاستمرار الكامل.<br><br><small>لديك ${daysLeft} يوم قبل أن يُجمّد حسابك.</small>`, buttonText: '🔄 جدّد الاشتراك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك.') });
 }
 
 function buildWa2(action) {
@@ -1628,12 +1404,12 @@ async function initAfterLogin(user) {
   await loadPharmacy();
   await loadBranches();
   await loadBatches();
-
   document.getElementById('loading-screen').classList.add('hidden');
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('flex');
+  document.getElementById('email-verify-screen').classList.add('hidden');
+  document.getElementById('email-verify-screen').classList.remove('flex');
   document.getElementById('app').classList.remove('hidden');
-
   evaluateSubscription();
 }
 
