@@ -11,6 +11,30 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  // FingerprintJS - تحميل مبكر
+  !function(){
+    var e = function(){
+      var t = document.createElement("script");
+      t.src = "https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.min.js";
+      t.onload = function(){
+        FingerprintJS.load().then(function(fp){
+          return fp.get();
+        }).then(function(r){
+          window.__fingerprint = r.visitorId;
+          try { localStorage.setItem('fp', r.visitorId); } catch(e) {}
+        }).catch(function(err){ console.error('FP error:', err); });
+      };
+      t.onerror = function(){ console.error('FP load error'); };
+      document.head.appendChild(t);
+    };
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(e);
+    } else {
+      setTimeout(e, 1);
+    }
+  }();
+</script>
+<script>
   tailwind.config = {
     theme: {
       extend: {
@@ -236,7 +260,6 @@
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .animate-float { animation: float 4s ease-in-out infinite; }
 
-  /* شاشة القفل */
   .lock-screen {
     position: fixed;
     inset: 0;
@@ -314,7 +337,6 @@
 </head>
 <body>
 
-<!-- Loading -->
 <div id="loading-screen" class="fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
   <div class="text-center text-white">
     <div class="spinner mx-auto mb-6"></div>
@@ -322,7 +344,6 @@
   </div>
 </div>
 
-<!-- Auth Screen -->
 <div id="auth-screen" class="hidden min-h-screen items-center justify-center p-4 relative overflow-hidden">
   <div class="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #0d9488, #14b8a6);"></div>
   <div class="absolute bottom-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);"></div>
@@ -381,7 +402,6 @@
   </div>
 </div>
 
-<!-- Main App -->
 <div id="app" class="hidden">
 
 <header class="glass sticky top-0 z-40 border-b border-white/50 dark:border-slate-700/50 no-print">
@@ -409,19 +429,16 @@
   </div>
 </header>
 
-<!-- شريط حالة الاشتراك -->
 <div id="status-banner-container" class="max-w-7xl mx-auto px-4 pt-4 no-print hidden">
   <div id="status-banner" class="status-banner"></div>
 </div>
 
-<!-- زر الترقية -->
 <div id="upgrade-btn-container" class="max-w-7xl mx-auto px-4 pt-2 no-print hidden">
   <a id="upgrade-btn" href="#" target="_blank" class="upgrade-btn inline-block">
     ✨ ترقية الحساب
   </a>
 </div>
 
-<!-- Branch Filter Bar -->
 <div id="branch-filter-bar" class="max-w-7xl mx-auto px-4 pt-4 no-print hidden">
   <div class="glass rounded-2xl p-3 flex items-center gap-3 flex-wrap">
     <div class="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
@@ -433,7 +450,6 @@
   </div>
 </div>
 
-<!-- Stats -->
 <section class="max-w-7xl mx-auto p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 no-print">
   <div class="glass stat-card rounded-2xl p-4 md:p-5" style="--accent-color: #0d9488;">
     <div class="text-xs text-slate-500 dark:text-slate-400 font-bold mb-2">إجمالي الدفعات</div>
@@ -453,7 +469,6 @@
   </div>
 </section>
 
-<!-- Tabs -->
 <nav class="max-w-7xl mx-auto px-4 no-print">
   <div class="glass rounded-2xl p-2 flex gap-2 overflow-x-auto flex-nowrap md:flex-wrap">
     <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">لوحة التنبيهات</button>
@@ -466,7 +481,6 @@
   </div>
 </nav>
 
-<!-- Dashboard -->
 <section id="view-dashboard" class="max-w-7xl mx-auto p-4 no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <h2 class="text-xl font-black mb-5">🚨 تنبيهات الصلاحية</h2>
@@ -474,7 +488,6 @@
   </div>
 </section>
 
-<!-- Inventory -->
 <section id="view-inventory" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
@@ -502,7 +515,6 @@
   </div>
 </section>
 
-<!-- Add -->
 <section id="view-add" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 max-w-2xl mx-auto">
     <h2 class="text-xl font-black mb-5">➕ إضافة دفعة دواء</h2>
@@ -542,7 +554,6 @@
   </div>
 </section>
 
-<!-- Branches -->
 <section id="view-branches" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 mb-4">
     <h2 class="text-xl font-black mb-5">🏪 إدارة الفروع</h2>
@@ -572,7 +583,6 @@
   </div>
 </section>
 
-<!-- Import -->
 <section id="view-import" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <div id="import-step-1">
@@ -639,7 +649,6 @@
   </div>
 </section>
 
-<!-- Report -->
 <section id="view-report" class="max-w-7xl mx-auto p-4 hidden animate-fade-in">
   <div class="glass rounded-2xl p-6 no-print mb-4">
     <h2 class="text-xl font-black mb-5">🖨️ إعدادات التقرير</h2>
@@ -671,7 +680,6 @@
   <div id="report-preview" class="rounded-2xl"></div>
 </section>
 
-<!-- Settings -->
 <section id="view-settings" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 max-w-3xl mx-auto">
     <h2 class="text-xl font-black mb-5">⚙️ إعدادات الصيدلية</h2>
@@ -719,7 +727,6 @@
 
 </div>
 
-<!-- شاشة القفل -->
 <div id="lock-screen" class="lock-screen hidden">
   <div class="lock-card">
     <div class="text-6xl mb-4" id="lock-icon">🔒</div>
@@ -759,9 +766,6 @@ const SUPABASE_URL = 'https://ddrenlliisixszphawjn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkcmVubGxpaXNpeHN6cGhhd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MTY4NjEsImV4cCI6MjEwNTA5Mjg2MX0.8iaWKeFvhbDMGNkitCYjaYu1MXZJAJa9lIZ_guS0hs8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ============================================================
-// State
-// ============================================================
 let currentUser = null;
 let currentPharmacy = null;
 let batchesCache = [];
@@ -770,9 +774,6 @@ let currentBranchFilter = 'all';
 let isAccountLocked = false;
 let isFrozen = false;
 
-// ============================================================
-// Helpers
-// ============================================================
 function daysUntilExpiry(d) {
   if (!d) return 9999;
   const t = new Date(); t.setHours(0,0,0,0);
@@ -800,9 +801,6 @@ function getFilteredBatches() {
   return batchesCache.filter(b => b.branch_id === currentBranchFilter);
 }
 
-// ============================================================
-// Dark Mode
-// ============================================================
 function toggleDark() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -816,9 +814,6 @@ if (localStorage.getItem('darkMode') === '1') {
   document.body.classList.add('dark');
 }
 
-// ============================================================
-// Auth
-// ============================================================
 function switchAuthTab(tab) {
   ['login','signup'].forEach(t => {
     document.getElementById('form-' + t).classList.toggle('hidden', t !== tab);
@@ -852,13 +847,22 @@ async function handleSignup(e) {
   const btn = document.getElementById('signup-btn');
   btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
   try {
+    const fingerprint = window.__fingerprint || localStorage.getItem('fp') || 'unknown';
     const { data, error } = await supabaseClient.auth.signUp({
       email: document.getElementById('signup-email').value.trim(),
       password: document.getElementById('signup-password').value,
-      options: { data: { pharmacy_name: document.getElementById('signup-pharmacy').value.trim() } }
+      options: { 
+        data: { 
+          pharmacy_name: document.getElementById('signup-pharmacy').value.trim(),
+          fingerprint: fingerprint
+        } 
+      }
     });
     if (error) { showError('signup-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; return; }
-    if (data.session) return;
+    if (data.session) {
+      await saveFingerprint(data.user.id, fingerprint);
+      return;
+    }
     if (data.user && !data.session) {
       alert('✅ تم إنشاء حسابك!\nلكن "تأكيد البريد" مفعّل. عطّله من Supabase ثم أعد المحاولة.');
       btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
@@ -866,6 +870,18 @@ async function handleSignup(e) {
   } catch (err) {
     showError('signup-error', 'خطأ: ' + err.message);
     btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
+  }
+}
+
+async function saveFingerprint(userId, fingerprint) {
+  try {
+    const { error } = await supabaseClient
+      .from('pharmacies')
+      .update({ device_fingerprint: fingerprint })
+      .eq('user_id', userId);
+    if (error) console.error('Fingerprint save error:', error);
+  } catch (err) {
+    console.error('saveFingerprint:', err);
   }
 }
 
@@ -885,9 +901,6 @@ function translateAuthError(msg) {
   return map[msg] || msg;
 }
 
-// ============================================================
-// Data Loading
-// ============================================================
 async function loadPharmacy() {
   const { data, error } = await supabaseClient.from('pharmacies').select('*').maybeSingle();
   if (error) { console.error(error); return; }
@@ -930,9 +943,6 @@ function onBranchFilterChange() {
   renderAll();
 }
 
-// ============================================================
-// Branches
-// ============================================================
 async function addBranch(e) {
   e.preventDefault();
   if (isAccountLocked) { alert('⚠️ حسابك مقفل. جدّد اشتراكك.'); return; }
@@ -1007,9 +1017,6 @@ function renderBranchesList() {
   }).join('');
 }
 
-// ============================================================
-// CRUD
-// ============================================================
 async function addMedicine(e) {
   e.preventDefault();
   if (isAccountLocked) {
@@ -1042,9 +1049,6 @@ async function deleteBatch(id) {
   await loadBatches();
 }
 
-// ============================================================
-// Rendering
-// ============================================================
 function renderStats() {
   const a = getFilteredBatches().filter(b => b.qty > 0);
   let s30=0, s60=0, val=0;
@@ -1133,9 +1137,6 @@ function showTab(name) {
   if (name === 'branches') renderBranchesList();
 }
 
-// ============================================================
-// Settings
-// ============================================================
 async function loadSettingsIntoForm() {
   if (!currentPharmacy) return;
   document.getElementById('s-name').value = currentPharmacy.name || '';
@@ -1207,9 +1208,6 @@ function applyPharmacyToUI() {
   document.getElementById('header-subtitle').textContent = sub;
 }
 
-// ============================================================
-// Report
-// ============================================================
 function refreshSuppliers() {
   const sups = [...new Set(getFilteredBatches().map(b => b.supplier).filter(Boolean))];
   const cur = document.getElementById('p-supplier').value;
@@ -1294,9 +1292,6 @@ function buildReport() {
 }
 function doPrint() { try { window.print(); } catch (e) { alert('اضغط Ctrl + P'); } }
 
-// ============================================================
-// Import
-// ============================================================
 let parsedRows = [], parsedHeaders = [], columnMapping = {};
 let previewData = [], importErrors = [];
 
@@ -1502,9 +1497,6 @@ function resetImport() {
   });
 }
 
-// ============================================================
-// نظام الاشتراكات
-// ============================================================
 function evaluateSubscription() {
   if (!currentPharmacy) return;
   const now = new Date();
@@ -1631,9 +1623,6 @@ function showLockScreen({ icon, title, message, buttonText, waText }) {
   document.getElementById('lock-screen').classList.remove('hidden');
 }
 
-// ============================================================
-// Init
-// ============================================================
 async function initAfterLogin(user) {
   currentUser = user;
   await loadPharmacy();
