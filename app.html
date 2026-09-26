@@ -236,7 +236,7 @@
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .animate-float { animation: float 4s ease-in-out infinite; }
 
-  /* ============ شاشة القفل ============ */
+  /* شاشة القفل */
   .lock-screen {
     position: fixed;
     inset: 0;
@@ -259,16 +259,12 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.5s ease-out;
   }
-  body.dark .lock-card {
-    background: #1e293b;
-    color: #f1f5f9;
-  }
+  body.dark .lock-card { background: #1e293b; color: #f1f5f9; }
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* شريط الحالة */
   .status-banner {
     padding: 10px 18px;
     border-radius: 14px;
@@ -299,10 +295,7 @@
     box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
     transition: all 0.3s;
   }
-  .upgrade-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
-  }
+  .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5); }
 
   @media (max-width: 640px) {
     #report-preview table { font-size: 9px; }
@@ -343,7 +336,7 @@
         </svg>
       </div>
       <h1 class="text-4xl font-black gradient-text mb-1">صلاحية</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400">أنقذ صيدليتك من خسائر الأدوية</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400">3 أيام تجربة مجانية</p>
     </div>
 
     <div class="flex bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 mb-6">
@@ -378,8 +371,11 @@
         <label class="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">كلمة السر * (6 أحرف على الأقل)</label>
         <input type="password" required id="signup-password" minlength="6" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="••••••••">
       </div>
+      <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-xl p-3 text-xs text-yellow-800 dark:text-yellow-200">
+        🎁 <b>3 أيام تجربة مجانية كاملة.</b> بعدها، اشترك بـ 300 ج.م/شهر للاستمرار.
+      </div>
       <div id="signup-error" class="hidden bg-red-50 dark:bg-red-900/20 border-r-4 border-red-500 p-3 rounded-xl text-sm text-red-700 dark:text-red-300"></div>
-      <button type="submit" id="signup-btn" class="btn-gradient w-full py-3 rounded-xl font-bold">إنشاء الحساب</button>
+      <button type="submit" id="signup-btn" class="btn-gradient w-full py-3 rounded-xl font-bold">ابدأ تجربة 3 أيام مجانًا</button>
       <p class="text-center text-sm text-slate-500">لديك حساب بالفعل؟ <a href="#" onclick="switchAuthTab('login')" class="text-teal-600 font-bold hover:underline">سجّل دخولك</a></p>
     </form>
   </div>
@@ -861,15 +857,15 @@ async function handleSignup(e) {
       password: document.getElementById('signup-password').value,
       options: { data: { pharmacy_name: document.getElementById('signup-pharmacy').value.trim() } }
     });
-    if (error) { showError('signup-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'إنشاء الحساب'; return; }
+    if (error) { showError('signup-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; return; }
     if (data.session) return;
     if (data.user && !data.session) {
       alert('✅ تم إنشاء حسابك!\nلكن "تأكيد البريد" مفعّل. عطّله من Supabase ثم أعد المحاولة.');
-      btn.disabled = false; btn.textContent = 'إنشاء الحساب';
+      btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
     }
   } catch (err) {
     showError('signup-error', 'خطأ: ' + err.message);
-    btn.disabled = false; btn.textContent = 'إنشاء الحساب';
+    btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
   }
 }
 
@@ -1207,7 +1203,7 @@ function applyPharmacyToUI() {
   if (currentPharmacy.logo_url) { logo.src = currentPharmacy.logo_url; logo.classList.remove('hidden'); }
   else { logo.src = ''; logo.classList.add('hidden'); }
   document.getElementById('header-title').textContent = currentPharmacy.name || 'صلاحية';
-  const sub = currentPharmacy.address || (currentPharmacy.phone ? '📞 ' + currentPharmacy.phone : 'أنقذ صيدليتك من خسائر الأدوية');
+  const sub = currentPharmacy.address || (currentPharmacy.phone ? '📞 ' + currentPharmacy.phone : '3 أيام تجربة مجانية');
   document.getElementById('header-subtitle').textContent = sub;
 }
 
@@ -1570,12 +1566,12 @@ function evaluateSubscription() {
     if (d <= 0) { handleExpired(trialEndsAt); return; }
     isAccountLocked = false; isFrozen = false;
     bannerContainer.classList.remove('hidden');
-    if (d <= 3) {
+    if (d <= 1) {
       banner.className = 'status-banner status-trial-urgent';
       banner.innerHTML = `⚠️ تجربة مجانية — متبقي ${d} يوم فقط!`;
       upgradeContainer.classList.remove('hidden');
       upgradeBtn.href = buildWa('أريد الاشتراك قبل انتهاء التجربة.');
-    } else if (d <= 7) {
+    } else if (d <= 2) {
       banner.className = 'status-banner status-trial';
       banner.innerHTML = `⏰ تجربة مجانية — متبقي ${d} يوم`;
       upgradeContainer.classList.remove('hidden');
