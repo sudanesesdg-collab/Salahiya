@@ -7,8 +7,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-  tailwind.config = { theme: { extend: { fontFamily: { sans: ['Cairo', 'sans-serif'] } } } }
+  tailwind.config = { 
+    theme: { 
+      extend: { 
+        fontFamily: { sans: ['Cairo', 'sans-serif'] },
+        animation: {
+          'fade-in': 'fadeIn 0.4s ease-out',
+          'slide-up': 'slideUp 0.4s ease-out'
+        },
+        keyframes: {
+          fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+        }
+      } 
+    } 
+  }
 </script>
 <style>
   body { font-family: 'Cairo', sans-serif; background: #0a0f1c; color: #f1f5f9; min-height: 100vh; }
@@ -35,10 +51,70 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  
+  .category-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; color: white; }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-content {
+    background: #0f172a;
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    animation: slideUp 0.3s ease-out;
+  }
+  .search-panel {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    margin-bottom: 20px;
+  }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+  .filter-chip:hover { transform: translateY(-2px); }
+  .filter-chip.active { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; box-shadow: 0 4px 14px rgba(13,148,136,0.3); }
+  .filter-chip:not(.active) { background: #334155; color: #cbd5e1; }
+  
+  .notif-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #1e293b;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .notif-item:hover { background: rgba(51, 65, 85, 0.4); }
+  .notif-item.unread { background: rgba(13, 148, 136, 0.1); }
+  
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    z-index: 200;
+    animation: slideUp 0.4s ease-out;
+    max-width: 360px;
+  }
 </style>
 </head>
 <body>
 
+<!-- Loading -->
 <div id="loading" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
   <div class="text-center">
     <div class="spinner mx-auto mb-4"></div>
@@ -46,6 +122,7 @@
   </div>
 </div>
 
+<!-- Login Screen -->
 <div id="login-screen" class="hidden min-h-screen items-center justify-center p-4">
   <div class="glass rounded-3xl max-w-md w-full p-8">
     <div class="text-center mb-6">
@@ -70,6 +147,7 @@
   </div>
 </div>
 
+<!-- Dashboard -->
 <div id="dashboard" class="hidden">
   <header class="glass sticky top-0 z-40 border-b border-slate-700/50">
     <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center flex-wrap gap-3">
@@ -83,13 +161,27 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <button onclick="toggleNotifPanel()" class="relative bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl text-sm font-bold border border-slate-700 text-white">
+          🔔
+          <span id="notif-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </button>
         <button onclick="loadData()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl text-sm font-bold border border-slate-700 text-white">🔄 تحديث</button>
         <button onclick="handleLogout()" class="bg-red-900/30 hover:bg-red-900/50 text-red-300 px-4 py-2 rounded-xl text-sm font-bold border border-red-900/50">🚪 خروج</button>
       </div>
     </div>
   </header>
 
-  <section class="max-w-7xl mx-auto p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+  <!-- Notifications Panel -->
+  <div id="notif-panel" class="hidden fixed top-20 left-4 md:left-20 z-50 w-96 max-w-[calc(100vw-2rem)] glass rounded-2xl max-h-[70vh] overflow-y-auto">
+    <div class="p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur rounded-t-2xl z-10">
+      <h3 class="font-black text-lg">🔔 التنبيهات الذكية</h3>
+      <button onclick="toggleNotifPanel()" class="text-slate-400 hover:text-slate-200 text-xl">✕</button>
+    </div>
+    <div id="notif-list"></div>
+  </div>
+
+  <!-- Stats -->
+  <section class="max-w-7xl mx-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
     <div class="glass rounded-2xl p-5">
       <div class="text-xs text-slate-400 font-bold mb-1">الصيدليات</div>
       <div id="s-pharmacies" class="text-3xl font-black text-teal-400">0</div>
@@ -103,6 +195,10 @@
       <div id="s-branches" class="text-3xl font-black text-purple-400">0</div>
     </div>
     <div class="glass rounded-2xl p-5">
+      <div class="text-xs text-slate-400 font-bold mb-1">التصنيفات</div>
+      <div id="s-categories" class="text-3xl font-black text-orange-400">0</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
       <div class="text-xs text-slate-400 font-bold mb-1">مسجّلون هذا الأسبوع</div>
       <div id="s-week" class="text-3xl font-black text-green-400">0</div>
     </div>
@@ -112,13 +208,61 @@
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-4 mt-2">
-    <input id="search" oninput="renderPharmacies()" placeholder="🔍 ابحث باسم الصيدلية..." class="w-full glass border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none text-white bg-slate-800">
+  <!-- Search Panel -->
+  <section class="max-w-7xl mx-auto px-4">
+    <div class="search-panel">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+          <span class="text-xl">🔍</span>
+        </div>
+        <h3 class="font-black text-lg">بحث متقدم</h3>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+        <input id="search-text" oninput="renderPharmacies()" placeholder="🔍 ابحث باسم الصيدلية..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none text-white">
+        <select id="search-status" onchange="renderPharmacies()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none text-white">
+          <option value="all">كل الحالات</option>
+          <option value="trial">🎁 تجربة</option>
+          <option value="active">✅ نشط</option>
+          <option value="expired">🔴 منتهي</option>
+          <option value="frozen">🧊 مجمّد</option>
+        </select>
+        <select id="search-classification" onchange="renderPharmacies()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none text-white">
+          <option value="all">كل التصنيفات</option>
+          <option value="beginner">🌱 مبتدئ</option>
+          <option value="active">🌿 نشط</option>
+          <option value="advanced">🌳 متقدم</option>
+        </select>
+      </div>
+      
+      <div class="flex flex-wrap gap-2">
+        <button onclick="toggleFingerprintFilter()" id="fp-filter" class="filter-chip" data-active="false">⚠️ المكررة فقط</button>
+        <button onclick="toggleWarningFilter()" id="warning-filter" class="filter-chip" data-active="false">⏰ تنتهي تجربتها قريبًا</button>
+        <button onclick="resetFilters()" class="filter-chip">🔄 إعادة تعيين</button>
+      </div>
+    </div>
   </section>
 
+  <!-- Growth Chart -->
+  <section class="max-w-7xl mx-auto px-4 mt-2">
+    <div class="glass rounded-2xl p-6">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h3 class="font-black text-lg">📈 نمو الصيدليات (آخر 6 أشهر)</h3>
+        <div id="growth-summary" class="text-sm text-slate-400">—</div>
+      </div>
+      <div style="height: 280px;">
+        <canvas id="growth-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pharmacies Table -->
   <section class="max-w-7xl mx-auto p-4">
     <div class="glass rounded-2xl p-6">
-      <h2 class="text-lg font-black mb-4">📋 قائمة الصيدليات</h2>
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h2 class="text-lg font-black">📋 قائمة الصيدليات</h2>
+        <div id="results-summary" class="text-sm text-slate-400">—</div>
+      </div>
       <div class="overflow-x-auto rounded-xl border border-slate-700">
         <table class="w-full text-sm">
           <thead class="bg-slate-800">
@@ -127,11 +271,13 @@
               <th class="p-3 text-right font-bold">الصيدلية</th>
               <th class="p-3 text-center font-bold">الأدوية</th>
               <th class="p-3 text-center font-bold">الفروع</th>
+              <th class="p-3 text-center font-bold">التصنيفات</th>
               <th class="p-3 text-center font-bold">القيمة</th>
               <th class="p-3 text-center font-bold">التصنيف</th>
               <th class="p-3 text-center font-bold">البصمة</th>
               <th class="p-3 text-center font-bold">الحالة</th>
               <th class="p-3 text-center font-bold">المتبقي</th>
+              <th class="p-3 text-center font-bold">آخر نشاط</th>
               <th class="p-3 text-center font-bold">إجراءات</th>
             </tr>
           </thead>
@@ -142,7 +288,21 @@
   </section>
 </div>
 
+<!-- Details Modal -->
+<div id="details-modal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 id="modal-title" class="text-2xl font-black gradient-text">تفاصيل الصيدلية</h2>
+      <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-200 text-2xl">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
 <script>
+// ============================================================
+// Supabase
+// ============================================================
 const SUPABASE_URL = 'https://ddrenlliisixszphawjn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkcmVubGxpaXNpeHN6cGhhd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MTY4NjEsImV4cCI6MjEwNTA5Mjg2MX0.8iaWKeFvhbDMGNkitCYjaYu1MXZJAJa9lIZ_guS0hs8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -150,11 +310,38 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allPharmacies = [];
 let allBatches = [];
 let allBranches = [];
+let allCategories = [];
+let growthChart = null;
+let filterFingerprint = false;
+let filterWarning = false;
 
+// ============================================================
+// Helpers
+// ============================================================
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
+function daysUntil(d) {
+  if (!d) return 9999;
+  const t = new Date(); t.setHours(0,0,0,0);
+  return Math.ceil((new Date(d) - t) / (1000*60*60*24));
+}
+function fmtNum(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+function timeAgo(date) {
+  if (!date) return '—';
+  const d = new Date(date);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return 'الآن';
+  if (mins < 60) return `${mins} دقيقة`;
+  if (hours < 24) return `${hours} ساعة`;
+  if (days < 7) return `${days} يوم`;
+  if (days < 30) return `${Math.floor(days/7)} أسبوع`;
+  if (days < 365) return `${Math.floor(days/30)} شهر`;
+  return `${Math.floor(days/365)} سنة`;
+}
 function getClassification(branchCount, batchCount) {
   if (branchCount >= 4 || batchCount >= 500) {
     return { icon: '🌳', label: 'متقدم', color: 'text-emerald-400 bg-emerald-500/20' };
@@ -165,6 +352,161 @@ function getClassification(branchCount, batchCount) {
   return { icon: '🌱', label: 'مبتدئ', color: 'text-slate-400 bg-slate-500/20' };
 }
 
+// ============================================================
+// Toast
+// ============================================================
+function showToast(message, type = 'info') {
+  const colors = {
+    success: 'background: linear-gradient(135deg, #16a34a, #22c55e)',
+    error: 'background: linear-gradient(135deg, #dc2626, #ef4444)',
+    info: 'background: linear-gradient(135deg, #0d9488, #14b8a6)',
+    warning: 'background: linear-gradient(135deg, #ea580c, #f97316)'
+  };
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.cssText = colors[type] || colors.info;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s, transform 0.3s';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ============================================================
+// Notifications
+// ============================================================
+function initNotifications() {
+  const notifications = [];
+  const now = new Date();
+  
+  // تنبيهات التجارب المنتهية
+  allPharmacies.forEach(p => {
+    const status = p.subscription_status || 'trial';
+    if (status === 'trial' && p.trial_ends_at) {
+      const d = Math.ceil((new Date(p.trial_ends_at) - now) / (1000*60*60*24));
+      if (d > 0 && d <= 2) {
+        notifications.push({
+          id: 'trial-' + p.id,
+          icon: '⏰',
+          title: 'تجربة تنتهي قريبًا',
+          message: `${p.name} — متبقي ${d} يوم`,
+          time: new Date().toISOString()
+        });
+      } else if (d <= 0) {
+        notifications.push({
+          id: 'expired-' + p.id,
+          icon: '🔴',
+          title: 'تجربة منتهية',
+          message: `${p.name} — انتهت التجربة`,
+          time: new Date().toISOString()
+        });
+      }
+    }
+  });
+
+  // تنبيهات البصمات المكررة
+  const fpCounts = {};
+  allPharmacies.forEach(p => {
+    if (p.device_fingerprint) {
+      fpCounts[p.device_fingerprint] = (fpCounts[p.device_fingerprint] || 0) + 1;
+    }
+  });
+  Object.entries(fpCounts).forEach(([fp, count]) => {
+    if (count > 1) {
+      const pharmacies = allPharmacies.filter(p => p.device_fingerprint === fp);
+      notifications.push({
+        id: 'fp-' + fp,
+        icon: '⚠️',
+        title: 'بصمة جهاز مكررة',
+        message: `${count} صيدليات بنفس الجهاز: ${pharmacies.map(p => p.name).join('، ')}`,
+        time: new Date().toISOString()
+      });
+    }
+  });
+
+  // تنبيهات عدم النشاط
+  allPharmacies.forEach(p => {
+    if (p.updated_at) {
+      const daysSince = Math.floor((now - new Date(p.updated_at)) / 86400000);
+      if (daysSince >= 14) {
+        notifications.push({
+          id: 'inactive-' + p.id,
+          icon: '😴',
+          title: 'صيدلية غير نشطة',
+          message: `${p.name} — لم تفتح التطبيق منذ ${daysSince} يوم`,
+          time: new Date().toISOString()
+        });
+      }
+    }
+  });
+
+  const badge = document.getElementById('notif-badge');
+  if (notifications.length > 0) {
+    badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+
+  const list = document.getElementById('notif-list');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="p-8 text-center text-slate-400"><div class="text-5xl mb-3">✨</div><p class="font-bold">لا توجد تنبيهات</p></div>';
+    return;
+  }
+
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item unread">
+      <div class="flex gap-3">
+        <div class="text-2xl flex-shrink-0">${n.icon}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-sm">${esc(n.title)}</div>
+          <div class="text-xs text-slate-400 mt-1">${esc(n.message)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleNotifPanel() {
+  document.getElementById('notif-panel').classList.toggle('hidden');
+}
+
+// ============================================================
+// Filters
+// ============================================================
+function toggleFingerprintFilter() {
+  filterFingerprint = !filterFingerprint;
+  const btn = document.getElementById('fp-filter');
+  btn.classList.toggle('active', filterFingerprint);
+  btn.dataset.active = filterFingerprint.toString();
+  renderPharmacies();
+}
+
+function toggleWarningFilter() {
+  filterWarning = !filterWarning;
+  const btn = document.getElementById('warning-filter');
+  btn.classList.toggle('active', filterWarning);
+  btn.dataset.active = filterWarning.toString();
+  renderPharmacies();
+}
+
+function resetFilters() {
+  filterFingerprint = false;
+  filterWarning = false;
+  document.getElementById('fp-filter').classList.remove('active');
+  document.getElementById('warning-filter').classList.remove('active');
+  document.getElementById('search-text').value = '';
+  document.getElementById('search-status').value = 'all';
+  document.getElementById('search-classification').value = 'all';
+  renderPharmacies();
+}
+
+// ============================================================
+// Auth
+// ============================================================
 async function handleLogin(e) {
   e.preventDefault();
   const btn = document.getElementById('btn');
@@ -209,27 +551,33 @@ async function showDashboard() {
   await loadData();
 }
 
+// ============================================================
+// Data
+// ============================================================
 async function loadData() {
-  const { data: pharmacies, error: e1 } = await supabaseClient.from('pharmacies').select('*').order('created_at', { ascending: false });
-  if (e1) console.error('pharmacies:', e1);
+  const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('created_at', { ascending: false });
   allPharmacies = pharmacies || [];
 
-  const { data: batches, error: e2 } = await supabaseClient.from('batches').select('*');
-  if (e2) console.error('batches:', e2);
+  const { data: batches } = await supabaseClient.from('batches').select('*');
   allBatches = batches || [];
 
-  const { data: branches, error: e3 } = await supabaseClient.from('branches').select('*');
-  if (e3) console.error('branches:', e3);
+  const { data: branches } = await supabaseClient.from('branches').select('*');
   allBranches = branches || [];
 
+  const { data: categories } = await supabaseClient.from('medicine_categories').select('*');
+  allCategories = categories || [];
+
   renderStats();
+  renderGrowthChart();
   renderPharmacies();
+  initNotifications();
 }
 
 function renderStats() {
   document.getElementById('s-pharmacies').textContent = allPharmacies.length;
   document.getElementById('s-batches').textContent = allBatches.length;
   document.getElementById('s-branches').textContent = allBranches.length;
+  document.getElementById('s-categories').textContent = allCategories.length;
 
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const thisWeek = allPharmacies.filter(p => new Date(p.created_at).getTime() > weekAgo).length;
@@ -246,29 +594,136 @@ function renderStats() {
   document.getElementById('s-expired').textContent = expiredCount;
 }
 
+function renderGrowthChart() {
+  const months = [], monthLabels = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(d);
+    monthLabels.push(d.toLocaleDateString('ar-EG', { month: 'short' }));
+  }
+
+  let cumulative = 0;
+  const pharmacyCounts = months.map(m => {
+    const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0, 23, 59, 59);
+    return allPharmacies.filter(p => new Date(p.created_at) <= monthEnd).length;
+  });
+
+  // إجمالي النمو
+  const totalGrowth = pharmacyCounts[5] - pharmacyCounts[0];
+  document.getElementById('growth-summary').textContent = `+${totalGrowth} صيدلية في 6 أشهر`;
+
+  if (growthChart) growthChart.destroy();
+  const ctx = document.getElementById('growth-chart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+  gradient.addColorStop(0, 'rgba(45, 212, 191, 0.4)');
+  gradient.addColorStop(1, 'rgba(45, 212, 191, 0.0)');
+
+  growthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: monthLabels,
+      datasets: [{
+        label: 'عدد الصيدليات',
+        data: pharmacyCounts,
+        borderColor: '#2dd4bf',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#2dd4bf',
+        pointBorderColor: '#0f172a',
+        pointBorderWidth: 3,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.95)', padding: 12, cornerRadius: 8 }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#cbd5e1', font: { family: 'Cairo', size: 12 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.1)' }, ticks: { color: '#cbd5e1', font: { family: 'Cairo', size: 12 }, stepSize: 1 } }
+      }
+    }
+  });
+}
+
 function renderPharmacies() {
-  const q = (document.getElementById('search').value || '').toLowerCase();
-  const filtered = allPharmacies.filter(p => (p.name || '').toLowerCase().includes(q));
+  const q = (document.getElementById('search-text')?.value || '').toLowerCase();
+  const statusFilter = document.getElementById('search-status')?.value || 'all';
+  const classFilter = document.getElementById('search-classification')?.value || 'all';
+
+  let filtered = allPharmacies.filter(p => (p.name || '').toLowerCase().includes(q));
+
+  // فلترة البصمة
+  if (filterFingerprint) {
+    const fpCounts = {};
+    allPharmacies.forEach(p => {
+      if (p.device_fingerprint) fpCounts[p.device_fingerprint] = (fpCounts[p.device_fingerprint] || 0) + 1;
+    });
+    filtered = filtered.filter(p => p.device_fingerprint && fpCounts[p.device_fingerprint] > 1);
+  }
+
+  // فلترة الحالة
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter(p => (p.subscription_status || 'trial') === statusFilter);
+  }
+
+  // فلترة التصنيف
+  if (classFilter !== 'all') {
+    filtered = filtered.filter(p => {
+      const branchCount = allBranches.filter(b => b.user_id === p.user_id).length;
+      const batchCount = allBatches.filter(b => b.user_id === p.user_id).length;
+      if (classFilter === 'beginner') return branchCount < 2 && batchCount < 100;
+      if (classFilter === 'active') return (branchCount >= 2 || batchCount >= 100) && !(branchCount >= 4 || batchCount >= 500);
+      if (classFilter === 'advanced') return branchCount >= 4 || batchCount >= 500;
+      return true;
+    });
+  }
+
+  // فلترة تحذير التجربة
+  if (filterWarning) {
+    const now = new Date();
+    filtered = filtered.filter(p => {
+      const status = p.subscription_status || 'trial';
+      if (status === 'trial' && p.trial_ends_at) {
+        const d = Math.ceil((new Date(p.trial_ends_at) - now) / (1000*60*60*24));
+        return d >= 0 && d <= 3;
+      }
+      return false;
+    });
+  }
 
   const tb = document.getElementById('table-body');
+  const summary = document.getElementById('results-summary');
+  
   if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="10" class="text-center text-slate-500 p-8">لا توجد صيدليات.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="12" class="text-center text-slate-500 p-8">لا توجد صيدليات مطابقة.</td></tr>';
+    summary.textContent = '0 نتيجة';
     return;
   }
 
+  summary.textContent = `${filtered.length} نتيجة`;
+
   const now = new Date();
+  const fpCounts = {};
+  allPharmacies.forEach(p => {
+    if (p.device_fingerprint) fpCounts[p.device_fingerprint] = (fpCounts[p.device_fingerprint] || 0) + 1;
+  });
+
   tb.innerHTML = filtered.map((p, i) => {
     const pharmacyBatches = allBatches.filter(b => b.user_id === p.user_id);
     const batchCount = pharmacyBatches.length;
     const value = pharmacyBatches.reduce((s, b) => s + (b.qty * Number(b.cost)), 0);
-    
-    const pharmacyBranches = allBranches.filter(b => b.user_id === p.user_id);
-    const branchCount = pharmacyBranches.length;
+    const branchCount = allBranches.filter(b => b.user_id === p.user_id).length;
+    const catCount = allCategories.filter(c => c.user_id === p.user_id).length;
 
     const fingerprint = p.device_fingerprint || '—';
-    const duplicateCount = fingerprint !== '—' 
-      ? allPharmacies.filter(x => x.device_fingerprint === fingerprint && x.user_id !== p.user_id).length 
-      : 0;
+    const duplicateCount = fingerprint !== '—' ? (fpCounts[fingerprint] || 1) - 1 : 0;
     const isDuplicateFingerprint = duplicateCount > 0;
 
     const status = p.subscription_status || 'trial';
@@ -318,7 +773,8 @@ function renderPharmacies() {
       <td class="p-3 font-bold text-teal-400">${esc(p.name)}</td>
       <td class="p-3 text-center font-bold">${batchCount}</td>
       <td class="p-3 text-center font-bold text-purple-400">${branchCount}</td>
-      <td class="p-3 text-center font-bold text-yellow-400">${value.toFixed(0)}</td>
+      <td class="p-3 text-center font-bold text-orange-400">${catCount}</td>
+      <td class="p-3 text-center font-bold text-yellow-400">${fmtNum(value)}</td>
       <td class="p-3 text-center">
         <span class="${classification.color} px-2 py-1 rounded-lg text-xs font-bold">
           ${classification.icon} ${classification.label}
@@ -332,19 +788,151 @@ function renderPharmacies() {
       </td>
       <td class="p-3 text-center">${statusHtml}</td>
       <td class="p-3 text-center text-xs text-slate-400">${daysText}</td>
+      <td class="p-3 text-center text-xs text-slate-400">${timeAgo(p.updated_at || p.created_at)}</td>
       <td class="p-3 text-center">
         <div class="flex gap-1 justify-center flex-wrap">
+          <button onclick="showDetails('${p.user_id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold" title="عرض التفاصيل">👁️</button>
+          <button onclick="exportPharmacyData('${p.user_id}')" class="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs font-bold" title="تصدير Excel">📥</button>
           <button onclick="activateMonth('${p.user_id}')" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs font-bold" title="تفعيل شهر">💳</button>
           <button onclick="extendTrial14('${p.user_id}')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold" title="تمديد تجربة">⏰</button>
           <button onclick="sendWarning('${p.user_id}','${esc(p.name)}')" class="bg-orange-600 hover:bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold" title="إرسال تحذير">📩</button>
           <button onclick="freezeAccount('${p.user_id}')" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1 rounded text-xs font-bold" title="تجميد">🧊</button>
-          <button onclick="unfreezeAccount('${p.user_id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold" title="فك التجميد">🔥</button>
+          <button onclick="unfreezeAccount('${p.user_id}')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded text-xs font-bold" title="فك التجميد">🔥</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 }
 
+// ============================================================
+// Details Modal
+// ============================================================
+function showDetails(userId) {
+  const p = allPharmacies.find(x => x.user_id === userId);
+  if (!p) return;
+
+  const pharmacyBatches = allBatches.filter(b => b.user_id === userId && b.qty > 0);
+  const pharmacyBranches = allBranches.filter(b => b.user_id === userId);
+  const pharmacyCategories = allCategories.filter(c => c.user_id === userId);
+
+  const totalValue = pharmacyBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+  const riskBatches = pharmacyBatches.filter(b => daysUntil(b.expiry) <= 90);
+  const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+  const expiredCount = pharmacyBatches.filter(b => daysUntil(b.expiry) < 0).length;
+
+  // توزيع التصنيفات
+  const catMap = {};
+  pharmacyBatches.forEach(b => {
+    const c = b.category || 'غير مصنّف';
+    if (!catMap[c]) catMap[c] = { count: 0, value: 0 };
+    catMap[c].count++;
+    catMap[c].value += b.qty * Number(b.cost);
+  });
+
+  // أعلى 5 أدوية خطر
+  const topRisk = riskBatches
+    .map(b => ({ ...b, days: daysUntil(b.expiry), value: b.qty * Number(b.cost) }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  document.getElementById('modal-title').textContent = `👁️ ${p.name}`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">إجمالي الأدوية</div>
+        <div class="text-2xl font-black text-teal-400">${pharmacyBatches.length}</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">الفروع</div>
+        <div class="text-2xl font-black text-purple-400">${pharmacyBranches.length}</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">التصنيفات</div>
+        <div class="text-2xl font-black text-orange-400">${pharmacyCategories.length}</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">قيمة المخزون</div>
+        <div class="text-2xl font-black text-yellow-400">${fmtNum(totalValue)}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">قيمة الخطر</div>
+        <div class="text-2xl font-black text-red-400">${fmtNum(riskValue)} ج.م</div>
+        <div class="text-xs text-slate-500 mt-1">${riskBatches.length} دواء</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-bold mb-1">أدوية منتهية</div>
+        <div class="text-2xl font-black text-red-500">${expiredCount}</div>
+        <div class="text-xs text-slate-500 mt-1">تحتاج إجراء فوري</div>
+      </div>
+    </div>
+
+    <div class="glass rounded-xl p-4 mb-6">
+      <h3 class="font-black mb-3">📊 توزيع التصنيفات</h3>
+      ${Object.keys(catMap).length === 0 
+        ? '<p class="text-slate-500 text-center py-4">لا توجد تصنيفات</p>'
+        : Object.entries(catMap).sort((a,b) => b[1].value - a[1].value).map(([name, data]) => {
+            const percentage = totalValue > 0 ? Math.round((data.value / totalValue) * 100) : 0;
+            return `<div class="mb-3">
+              <div class="flex justify-between items-center mb-1 text-sm">
+                <span class="font-bold">${esc(name)}</span>
+                <span class="text-slate-400">${data.count} دواء (${percentage}%)</span>
+              </div>
+              <div class="w-full bg-slate-700 rounded-full h-2">
+                <div class="h-2 rounded-full bg-teal-500" style="width: ${percentage}%;"></div>
+              </div>
+            </div>`;
+          }).join('')
+      }
+    </div>
+
+    ${topRisk.length > 0 ? `
+      <div class="glass rounded-xl p-4 mb-6">
+        <h3 class="font-black mb-3">⚠️ أعلى 5 أدوية خطر</h3>
+        ${topRisk.map(b => `
+          <div class="flex justify-between items-center p-2 border-b border-slate-700 last:border-0">
+            <div>
+              <div class="font-bold text-sm">${esc(b.name)}</div>
+              <div class="text-xs text-slate-500">${esc(b.batch)} | ${b.qty} علبة</div>
+            </div>
+            <div class="text-right">
+              <div class="font-black text-sm text-red-400">${fmtNum(b.value)} ج.م</div>
+              <div class="text-xs text-slate-500">${b.days < 0 ? 'منتهي' : `${b.days} يوم`}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    <div class="glass rounded-xl p-4">
+      <h3 class="font-black mb-3">🏪 الفروع</h3>
+      ${pharmacyBranches.length === 0 
+        ? '<p class="text-slate-500 text-center py-4">لا توجد فروع</p>'
+        : pharmacyBranches.map(b => {
+            const brBatches = pharmacyBatches.filter(x => x.branch_id === b.id);
+            const brValue = brBatches.reduce((s, x) => s + x.qty * Number(x.cost), 0);
+            return `<div class="flex justify-between items-center p-2 border-b border-slate-700 last:border-0">
+              <span class="font-bold">${b.is_main ? '⭐' : '🏪'} ${esc(b.name)}</span>
+              <span class="text-xs text-slate-400">${brBatches.length} دواء — ${fmtNum(brValue)} ج.م</span>
+            </div>`;
+          }).join('')
+      }
+    </div>
+  `;
+
+  document.getElementById('details-modal').classList.remove('hidden');
+}
+
+function closeDetailsModal() {
+  document.getElementById('details-modal').classList.add('hidden');
+}
+
+// ============================================================
+// Actions
+// ============================================================
 async function activateMonth(userId) {
   if (!confirm('تفعيل الاشتراك لمدة شهر كامل؟')) return;
   const now = new Date();
@@ -360,16 +948,16 @@ async function activateMonth(userId) {
     frozen_at: null
   }).eq('user_id', userId);
 
-  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadData();
-  alert('✅ تم التفعيل لمدة شهر!');
+  showToast('✅ تم التفعيل لمدة شهر!', 'success');
 }
 
 async function extendTrial14(userId) {
   const days = prompt('كم يومًا تريد تمديد التجربة؟', '3');
   if (!days || isNaN(days)) return;
   const daysNum = parseInt(days);
-  if (daysNum < 1 || daysNum > 90) { alert('يجب أن يكون بين 1 و 90.'); return; }
+  if (daysNum < 1 || daysNum > 90) { showToast('⚠️ يجب أن يكون بين 1 و 90.', 'warning'); return; }
   
   if (!confirm(`تمديد التجربة ${daysNum} يومًا؟`)) return;
   const p = allPharmacies.find(x => x.user_id === userId);
@@ -386,15 +974,12 @@ async function extendTrial14(userId) {
     frozen_at: null
   }).eq('user_id', userId);
 
-  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadData();
-  alert(`✅ تم تمديد التجربة ${daysNum} يومًا!`);
+  showToast(`✅ تم تمديد التجربة ${daysNum} يومًا!`, 'success');
 }
 
 async function sendWarning(userId, pharmacyName) {
-  const p = allPharmacies.find(x => x.user_id === userId);
-  if (!p) return;
-  
   const defaultMsg = `مرحبًا دكتور،
 
 نلاحظ أنك سجّلت حسابًا جديدًا في "صلاحية" من نفس الجهاز.
@@ -407,7 +992,8 @@ async function sendWarning(userId, pharmacyName) {
   const msg = prompt('نص رسالة التحذير:', defaultMsg);
   if (!msg) return;
   
-  alert('⚠️ لم يتم إرسال الرسالة تلقائيًا.\n\nيرجى نسخ النص التالي وإرساله يدويًا على واتساب:\n\n' + msg);
+  await navigator.clipboard.writeText(msg).catch(() => {});
+  alert('✅ تم نسخ الرسالة!\n\nالآن يمكنك لصقها على واتساب.');
 }
 
 async function freezeAccount(userId) {
@@ -416,9 +1002,9 @@ async function freezeAccount(userId) {
     subscription_status: 'frozen',
     frozen_at: new Date().toISOString()
   }).eq('user_id', userId);
-  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadData();
-  alert('🧊 تم التجميد!');
+  showToast('🧊 تم التجميد!', 'success');
 }
 
 async function unfreezeAccount(userId) {
@@ -433,11 +1019,80 @@ async function unfreezeAccount(userId) {
     grace_period_ends_at: graceEnd.toISOString(),
     frozen_at: null
   }).eq('user_id', userId);
-  if (error) { alert('خطأ: ' + error.message); console.error(error); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadData();
-  alert('🔥 تم فك التجميد!');
+  showToast('🔥 تم فك التجميد!', 'success');
 }
 
+// ============================================================
+// Export Pharmacy Data
+// ============================================================
+function exportPharmacyData(userId) {
+  const p = allPharmacies.find(x => x.user_id === userId);
+  if (!p) return;
+
+  const pharmacyBatches = allBatches.filter(b => b.user_id === userId);
+  const pharmacyBranches = allBranches.filter(b => b.user_id === userId);
+  const pharmacyCategories = allCategories.filter(c => c.user_id === userId);
+
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: معلومات الصيدلية
+  const infoData = [
+    ['معلومات الصيدلية'],
+    ['الاسم', p.name || '—'],
+    ['الهاتف', p.phone || '—'],
+    ['العنوان', p.address || '—'],
+    ['الترخيص', p.license || '—'],
+    [''],
+    ['الحالة', p.subscription_status || 'trial'],
+    ['تاريخ التسجيل', new Date(p.created_at).toLocaleDateString('ar-EG')],
+    ['البصمة', p.device_fingerprint || '—']
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(infoData);
+  ws1['!cols'] = [{ wch: 20 }, { wch: 40 }];
+  XLSX.utils.book_append_sheet(wb, ws1, 'معلومات');
+
+  // Sheet 2: المخزون
+  const inventoryData = [['اسم الدواء', 'التصنيف', 'الفرع', 'التشغيلة', 'الانتهاء', 'الكمية', 'التكلفة', 'القيمة', 'المورد']];
+  pharmacyBatches.forEach(b => {
+    inventoryData.push([
+      b.name, b.category || 'غير مصنّف',
+      (pharmacyBranches.find(x => x.id === b.branch_id) || {}).name || '—',
+      b.batch || '—', b.expiry, b.qty, Number(b.cost).toFixed(2),
+      (b.qty * Number(b.cost)).toFixed(2), b.supplier || '—'
+    ]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(inventoryData);
+  XLSX.utils.book_append_sheet(wb, ws2, 'المخزون');
+
+  // Sheet 3: الفروع
+  const branchesData = [['الفرع', 'رئيسي', 'عدد الأدوية', 'القيمة']];
+  pharmacyBranches.forEach(br => {
+    const brBatches = pharmacyBatches.filter(x => x.branch_id === br.id);
+    const value = brBatches.reduce((s, x) => s + x.qty * Number(x.cost), 0);
+    branchesData.push([br.name, br.is_main ? 'نعم' : 'لا', brBatches.length, value.toFixed(2)]);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(branchesData);
+  XLSX.utils.book_append_sheet(wb, ws3, 'الفروع');
+
+  // Sheet 4: التصنيفات
+  const catData = [['التصنيف', 'اللون', 'عدد الأدوية']];
+  pharmacyCategories.forEach(c => {
+    const count = pharmacyBatches.filter(b => b.category === c.name).length;
+    catData.push([c.name, c.color, count]);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(catData);
+  XLSX.utils.book_append_sheet(wb, ws4, 'التصنيفات');
+
+  const fileName = `pharmacy-${(p.name || 'data').replace(/[^\u0600-\u06FF\w]/g, '_')}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+  showToast('✅ تم تصدير بيانات الصيدلية!', 'success');
+}
+
+// ============================================================
+// Init
+// ============================================================
 async function init() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session?.user) {
