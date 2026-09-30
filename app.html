@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -32,11 +34,12 @@
     theme: {
       extend: {
         fontFamily: { sans: ['Cairo', 'Inter', 'sans-serif'] },
-        animation: { 'float': 'float 6s ease-in-out infinite', 'fade-in': 'fadeIn 0.4s ease-out', 'slide-up': 'slideUp 0.5s ease-out' },
+        animation: { 'float': 'float 6s ease-in-out infinite', 'fade-in': 'fadeIn 0.4s ease-out', 'slide-up': 'slideUp 0.5s ease-out', 'toast-in': 'toastIn 0.4s ease-out' },
         keyframes: {
           float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
           slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-          fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } }
+          fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+          toastIn: { '0%': { opacity: 0, transform: 'translateY(20px) translateX(20px)' }, '100%': { opacity: 1, transform: 'translateY(0) translateX(0)' } }
         }
       }
     }
@@ -148,55 +151,46 @@
   body.dark .status-expired { background: rgba(153, 27, 27, 0.3); color: #fca5a5; border-color: rgba(252, 165, 165, 0.3); }
   .upgrade-btn { padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; color: white; background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); transition: all 0.3s; }
   .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5); }
-
-  /* === بطاقات KPI للتحليلات === */
-  .kpi-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 20px;
-    padding: 20px;
-    transition: all 0.3s ease;
-  }
+  .kpi-card { position: relative; overflow: hidden; border-radius: 20px; padding: 20px; transition: all 0.3s ease; }
   .kpi-card:hover { transform: translateY(-4px); }
-  .kpi-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-bottom: 12px;
-  }
-
-  /* === Chart Container === */
-  .chart-container {
-    position: relative;
-    height: 280px;
-    margin: 20px 0;
-  }
-  @media (max-width: 640px) {
-    .chart-container { height: 240px; }
-  }
-
-  /* === Health Score === */
-  .health-gauge {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    margin: 0 auto;
-  }
+  .kpi-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+  .chart-container { position: relative; height: 280px; margin: 20px 0; }
+  @media (max-width: 640px) { .chart-container { height: 240px; } }
+  .health-gauge { position: relative; width: 160px; height: 160px; margin: 0 auto; }
   .health-gauge svg { transform: rotate(-90deg); }
-  .health-gauge-text {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-  }
+  .health-gauge-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .notif-bell { position: relative; }
+  .notif-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 900; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5); animation: pulse 2s infinite; }
+  .notif-panel { position: fixed; top: 70px; left: 20px; width: 380px; max-width: calc(100vw - 40px); max-height: 500px; overflow-y: auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); z-index: 60; animation: slideUp 0.3s ease-out; }
+  body.dark .notif-panel { background: #1e293b; }
+  .notif-item { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; }
+  body.dark .notif-item { border-bottom-color: #334155; }
+  .notif-item:hover { background: #f8fafc; }
+  body.dark .notif-item:hover { background: rgba(51, 65, 85, 0.4); }
+  .notif-item.unread { background: #f0fdfa; }
+  body.dark .notif-item.unread { background: rgba(13, 148, 136, 0.15); }
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 20px; border-radius: 16px; color: white; font-weight: 700; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); z-index: 200; animation: toastIn 0.4s ease-out; max-width: 360px; }
+  @keyframes toastIn { '0%': { opacity: 0; transform: translateY(20px) translateX(20px); }, '100%': { opacity: 1; transform: translateY(0) translateX(0); } }
+
+  /* === بحث متقدم === */
+  .search-panel { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  body.dark .search-panel { background: rgba(15,23,42,0.85); }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+  .filter-chip:hover { transform: translateY(-2px); }
+  .filter-chip.active { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; box-shadow: 0 4px 14px rgba(13,148,136,0.3); }
+  .filter-chip:not(.active) { background: #f1f5f9; color: #475569; }
+  body.dark .filter-chip:not(.active) { background: #334155; color: #cbd5e1; }
+
+  /* === تصنيفات === */
+  .category-badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; color: white; }
+  .category-manager { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  body.dark .category-manager { background: rgba(15,23,42,0.85); }
 
   @media (max-width: 640px) {
     #report-preview table { font-size: 9px; }
     #report-preview table th, #report-preview table td { padding: 4px 2px !important; }
     #report-preview { padding: 12px !important; }
+    .notif-panel { width: calc(100vw - 20px); left: 10px; }
   }
   @media print { .no-print { display: none !important; } body { background: white !important; color: #000 !important; } .glass { background: white !important; border: none !important; box-shadow: none !important; } #report-preview { padding: 0 !important; margin: 0 !important; box-shadow: none !important; } #view-report { padding: 0 !important; margin: 0 !important; } }
 </style>
@@ -210,6 +204,7 @@
   </div>
 </div>
 
+<!-- Auth Screen -->
 <div id="auth-screen" class="hidden min-h-screen items-center justify-center p-4 relative overflow-hidden">
   <div class="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #0d9488, #14b8a6);"></div>
   <div class="absolute bottom-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);"></div>
@@ -296,14 +291,18 @@
         <p id="header-subtitle" class="text-xs md:text-sm text-slate-500 dark:text-slate-400">جاري التحميل...</p>
       </div>
     </div>
-    <div class="flex gap-2 flex-wrap">
+    <div class="flex gap-2 flex-wrap items-center">
+      <button onclick="toggleNotifPanel()" class="notif-bell w-10 h-10 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-white/50 dark:border-slate-700/50 hover:scale-105 transition-transform flex items-center justify-center relative">
+        <span class="text-lg">🔔</span>
+        <span id="notif-badge" class="notif-badge hidden">0</span>
+      </button>
       <button onclick="toggleDark()" class="w-10 h-10 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-white/50 dark:border-slate-700/50 hover:scale-105 transition-transform flex items-center justify-center">
         <svg id="dark-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
-      <button onclick="showTab('analytics')" class="px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-white/50 dark:border-slate-700/50 hover:scale-105 transition-transform text-sm font-bold flex items-center gap-2">
-        📊 التحليلات
+      <button onclick="enablePushNotifications()" id="push-btn" class="px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-white/50 dark:border-slate-700/50 hover:scale-105 transition-transform text-sm font-bold flex items-center gap-2">
+        🔔 تفعيل الإشعارات
       </button>
       <button onclick="showTab('report')" class="px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-white/50 dark:border-slate-700/50 hover:scale-105 transition-transform text-sm font-bold flex items-center gap-2">
         🖨️ التقرير
@@ -314,6 +313,18 @@
     </div>
   </div>
 </header>
+
+<!-- Notifications Panel -->
+<div id="notif-panel" class="notif-panel hidden">
+  <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
+    <h3 class="font-black text-lg">🔔 الإشعارات</h3>
+    <div class="flex gap-2">
+      <button onclick="markAllRead()" class="text-xs text-teal-600 hover:text-teal-800 font-bold">تعليم الكل كمقروء</button>
+      <button onclick="toggleNotifPanel()" class="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+    </div>
+  </div>
+  <div id="notif-list"></div>
+</div>
 
 <div id="status-banner-container" class="max-w-7xl mx-auto px-4 pt-4 no-print hidden">
   <div id="status-banner" class="status-banner"></div>
@@ -356,14 +367,17 @@
     <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">لوحة التنبيهات</button>
     <button onclick="showTab('analytics')" id="tab-analytics" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📊 التحليلات</button>
     <button onclick="showTab('inventory')" id="tab-inventory" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">المخزون</button>
+    <button onclick="showTab('search')" id="tab-search" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🔍 بحث متقدم</button>
     <button onclick="showTab('add')" id="tab-add" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">+ إضافة دواء</button>
     <button onclick="showTab('import')" id="tab-import" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📁 استيراد</button>
+    <button onclick="showTab('categories')" id="tab-categories" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🏷️ التصنيفات</button>
     <button onclick="showTab('branches')" id="tab-branches" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🏪 الفروع</button>
     <button onclick="showTab('report')" id="tab-report" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🖨️ التقرير</button>
     <button onclick="showTab('settings')" id="tab-settings" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">⚙️ الإعدادات</button>
   </div>
 </nav>
 
+<!-- Dashboard -->
 <section id="view-dashboard" class="max-w-7xl mx-auto p-4 no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <h2 class="text-xl font-black mb-5">🚨 تنبيهات الصلاحية</h2>
@@ -371,10 +385,102 @@
   </div>
 </section>
 
-<!-- === ANALYTICS VIEW === -->
+<!-- Search Tab -->
+<section id="view-search" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="search-panel">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">🔍</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">بحث متقدم</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">ابحث بدقة، وفلتر بسرعة</p>
+      </div>
+    </div>
+    
+    <div class="mb-4">
+      <label class="block text-sm font-bold mb-2">بحث نصي (اسم الدواء، التشغيلة، المورد):</label>
+      <input id="adv-search-input" oninput="renderAdvancedSearch()" placeholder="🔍 اكتب كلمة البحث..." class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">الفرع:</label>
+        <select id="adv-search-branch" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل الفروع</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">التصنيف:</label>
+        <select id="adv-search-category" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل التصنيفات</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">المورد:</label>
+        <select id="adv-search-supplier" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل الموردين</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-bold mb-2">الحالة:</label>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="toggleStatusFilter('all')" id="status-filter-all" class="filter-chip active" data-status="all">الكل</button>
+        <button onclick="toggleStatusFilter('expired')" id="status-filter-expired" class="filter-chip" data-status="expired">🚨 منتهي</button>
+        <button onclick="toggleStatusFilter('critical')" id="status-filter-critical" class="filter-chip" data-status="critical">🔴 خطر (≤30)</button>
+        <button onclick="toggleStatusFilter('warning')" id="status-filter-warning" class="filter-chip" data-status="warning">🟠 تحذير (≤60)</button>
+        <button onclick="toggleStatusFilter('watch')" id="status-filter-watch" class="filter-chip" data-status="watch">🟡 مراقبة (≤90)</button>
+        <button onclick="toggleStatusFilter('safe')" id="status-filter-safe" class="filter-chip" data-status="safe">🟢 سليم</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">الحد الأدنى للسعر:</label>
+        <input type="number" id="adv-min-price" oninput="renderAdvancedSearch()" placeholder="0" class="w-full border rounded-xl px-4 py-3">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">الحد الأقصى للسعر:</label>
+        <input type="number" id="adv-max-price" oninput="renderAdvancedSearch()" placeholder="10000" class="w-full border rounded-xl px-4 py-3">
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <button onclick="resetAdvancedSearch()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-6 py-3 rounded-xl font-bold">
+        🔄 إعادة تعيين
+      </button>
+    </div>
+  </div>
+
+  <div class="glass rounded-2xl p-6">
+    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+      <h3 class="text-lg font-black">النتائج (<span id="adv-results-count">0</span>)</h3>
+      <div class="text-sm text-slate-500" id="adv-results-summary">—</div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th class="p-3 text-right">الدواء</th>
+            <th class="p-3 text-right">التصنيف</th>
+            <th class="p-3 text-right">الفرع</th>
+            <th class="p-3 text-right">المورد</th>
+            <th class="p-3 text-right">الانتهاء</th>
+            <th class="p-3 text-center">الكمية</th>
+            <th class="p-3 text-center">القيمة</th>
+            <th class="p-3 text-center">الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="adv-results-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Analytics -->
 <section id="view-analytics" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
-  
-  <!-- Header -->
   <div class="glass rounded-2xl p-6 mb-4">
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div class="flex items-center gap-3">
@@ -386,13 +492,20 @@
           <p class="text-sm text-slate-500 dark:text-slate-400">رؤية شاملة لمخزونك واتجاهاتك</p>
         </div>
       </div>
-      <div class="text-xs text-slate-500 dark:text-slate-400">
-        آخر تحديث: <span id="analytics-updated">—</span>
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="text-xs text-slate-500 dark:text-slate-400">
+          آخر تحديث: <span id="analytics-updated">—</span>
+        </div>
+        <button onclick="exportAnalyticsToExcel()" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
+          📥 Excel
+        </button>
+        <button onclick="generateAdvancedPDF('analytics')" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
+          📄 PDF
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- KPI Cards Row -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
     <div class="glass kpi-card border-r-4 border-teal-500">
       <div class="kpi-icon bg-teal-50 dark:bg-teal-900/30">📦</div>
@@ -420,9 +533,7 @@
     </div>
   </div>
 
-  <!-- Health Score + Distribution -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <!-- Health Score -->
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">💊 صحة المخزون</h3>
       <div class="health-gauge">
@@ -441,7 +552,6 @@
       <div id="health-desc" class="text-center text-xs text-slate-500 dark:text-slate-400 mt-1">—</div>
     </div>
 
-    <!-- Distribution -->
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب الحالة</h3>
       <div class="chart-container">
@@ -450,7 +560,6 @@
     </div>
   </div>
 
-  <!-- Trend Line -->
   <div class="glass rounded-2xl p-6 mb-4">
     <h3 class="text-lg font-black mb-4">📈 اتجاه الأدوية المُنقذة (آخر 6 أشهر)</h3>
     <div class="chart-container">
@@ -458,24 +567,26 @@
     </div>
   </div>
 
-  <!-- Suppliers + Top Risk -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <!-- Suppliers -->
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">🏢 أفضل الموردين</h3>
       <div class="chart-container">
         <canvas id="chart-suppliers"></canvas>
       </div>
     </div>
-
-    <!-- Top Risk -->
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">⚠️ أعلى 5 أدوية معرّضة للخطر</h3>
       <div id="top-risk-list" class="space-y-2"></div>
     </div>
   </div>
 
-  <!-- Branch Comparison -->
+  <div class="glass rounded-2xl p-6 mb-4">
+    <h3 class="text-lg font-black mb-4">🏷️ توزيع الأدوية حسب التصنيف</h3>
+    <div class="chart-container">
+      <canvas id="chart-categories"></canvas>
+    </div>
+  </div>
+
   <div id="branch-analytics-container" class="glass rounded-2xl p-6 mb-4 hidden">
     <h3 class="text-lg font-black mb-4">🏪 مقارنة الفروع</h3>
     <div class="overflow-x-auto">
@@ -493,9 +604,46 @@
       </table>
     </div>
   </div>
-
 </section>
 
+<!-- Categories -->
+<section id="view-categories" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="category-manager">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">🏷️</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">إدارة التصنيفات</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">نظّم أدويتك حسب النوع</p>
+      </div>
+    </div>
+
+    <form onsubmit="addCategory(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-bold mb-2">اسم التصنيف *</label>
+        <input required id="cat-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="مثال: مضاد حيوي">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">اللون</label>
+        <input type="color" id="cat-color" value="#0d9488" class="w-full border rounded-xl px-4 py-3 h-12">
+      </div>
+      <div class="md:col-span-3">
+        <button type="submit" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold w-full">➕ إضافة تصنيف</button>
+      </div>
+    </form>
+
+    <h3 class="text-lg font-black mb-4">التصنيفات الحالية (<span id="categories-count">0</span>)</h3>
+    <div id="categories-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+  </div>
+
+  <div class="glass rounded-2xl p-6">
+    <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب التصنيف</h3>
+    <div id="categories-stats"></div>
+  </div>
+</section>
+
+<!-- Inventory -->
 <section id="view-inventory" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
@@ -507,6 +655,7 @@
         <thead>
           <tr>
             <th class="p-3 text-right">الدواء</th>
+            <th class="p-3 text-right">التصنيف</th>
             <th class="p-3 text-right">الفرع</th>
             <th class="p-3 text-right">التشغيلة</th>
             <th class="p-3 text-right">الانتهاء</th>
@@ -523,6 +672,7 @@
   </div>
 </section>
 
+<!-- Add -->
 <section id="view-add" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 max-w-2xl mx-auto">
     <h2 class="text-xl font-black mb-5">➕ إضافة دفعة دواء</h2>
@@ -534,6 +684,12 @@
       <div class="md:col-span-2">
         <label class="block text-sm font-bold mb-2">اسم الدواء *</label>
         <input required id="f-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="أوجمنتين 1 جم">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">التصنيف</label>
+        <select id="f-category" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+          <option value="غير مصنّف">غير مصنّف</option>
+        </select>
       </div>
       <div>
         <label class="block text-sm font-bold mb-2">رقم التشغيلة *</label>
@@ -562,6 +718,7 @@
   </div>
 </section>
 
+<!-- Branches -->
 <section id="view-branches" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 mb-4">
     <h2 class="text-xl font-black mb-5">🏪 إدارة الفروع</h2>
@@ -591,6 +748,7 @@
   </div>
 </section>
 
+<!-- Import -->
 <section id="view-import" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <div id="import-step-1">
@@ -657,6 +815,7 @@
   </div>
 </section>
 
+<!-- Report -->
 <section id="view-report" class="max-w-7xl mx-auto p-4 hidden animate-fade-in">
   <div class="glass rounded-2xl p-6 no-print mb-4">
     <h2 class="text-xl font-black mb-5">🖨️ إعدادات التقرير</h2>
@@ -683,11 +842,15 @@
         </select>
       </div>
     </div>
-    <button onclick="doPrint()" class="btn-gradient mt-4 text-white px-6 py-3 rounded-xl font-bold">🖨️ اطبع الآن</button>
+    <div class="flex gap-2 mt-4 flex-wrap">
+      <button onclick="doPrint()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">🖨️ اطبع الآن</button>
+      <button onclick="generateAdvancedPDF('supplier-report')" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">📄 تحميل PDF</button>
+    </div>
   </div>
   <div id="report-preview" class="rounded-2xl"></div>
 </section>
 
+<!-- Settings -->
 <section id="view-settings" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 max-w-3xl mx-auto">
     <h2 class="text-xl font-black mb-5">⚙️ إعدادات الصيدلية</h2>
@@ -735,6 +898,7 @@
 
 </div>
 
+<!-- Lock Screen -->
 <div id="lock-screen" class="lock-screen hidden">
   <div class="lock-card">
     <div class="text-6xl mb-4" id="lock-icon">🔒</div>
@@ -757,6 +921,9 @@
 </div>
 
 <script>
+// ============================================================
+// Supabase
+// ============================================================
 const SUPABASE_URL = 'https://ddrenlliisixszphawjn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkcmVubGxpaXNpeHN6cGhhd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MTY4NjEsImV4cCI6MjEwNTA5Mjg2MX0.8iaWKeFvhbDMGNkitCYjaYu1MXZJAJa9lIZ_guS0hs8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -765,6 +932,8 @@ let currentUser = null;
 let currentPharmacy = null;
 let batchesCache = [];
 let branchesCache = [];
+let categoriesCache = [];
+let membersCache = [];
 let currentBranchFilter = 'all';
 let isAccountLocked = false;
 let isFrozen = false;
@@ -772,7 +941,14 @@ let pendingVerificationEmail = '';
 let chartDistribution = null;
 let chartTrend = null;
 let chartSuppliers = null;
+let chartCategories = null;
+let notifications = [];
+let notifPanelOpen = false;
+let currentStatusFilter = 'all';
 
+// ============================================================
+// Helpers
+// ============================================================
 function daysUntilExpiry(d) {
   if (!d) return 9999;
   const t = new Date(); t.setHours(0,0,0,0);
@@ -797,11 +973,96 @@ function getBranchName(branchId) {
   const b = branchesCache.find(x => x.id === branchId);
   return b ? b.name : 'غير محدد';
 }
+function getCategoryColor(cat) {
+  const c = categoriesCache.find(x => x.name === cat);
+  return c ? c.color : '#64748b';
+}
 function getFilteredBatches() {
   if (currentBranchFilter === 'all') return batchesCache;
   return batchesCache.filter(b => b.branch_id === currentBranchFilter);
 }
 
+// ============================================================
+// Toast
+// ============================================================
+function showToast(message, type = 'info') {
+  const colors = {
+    success: 'background: linear-gradient(135deg, #16a34a, #22c55e)',
+    error: 'background: linear-gradient(135deg, #dc2626, #ef4444)',
+    info: 'background: linear-gradient(135deg, #0d9488, #14b8a6)',
+    warning: 'background: linear-gradient(135deg, #ea580c, #f97316)'
+  };
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.cssText = colors[type] || colors.info;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s, transform 0.3s';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ============================================================
+// Push Notifications
+// ============================================================
+async function enablePushNotifications() {
+  if (!('Notification' in window)) {
+    showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    showToast('✅ الإشعارات مفعّلة بالفعل', 'success');
+    scheduleNotifications();
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    showToast('✅ تم تفعيل الإشعارات!', 'success');
+    new Notification('صلاحية', {
+      body: 'مرحبًا! ستصلك إشعارات بالأدوية التي ستنتهي قريبًا.',
+      icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
+    });
+    scheduleNotifications();
+  } else {
+    showToast('⚠️ تم رفض الإشعارات', 'warning');
+  }
+}
+
+function scheduleNotifications() {
+  if (Notification.permission !== 'granted') return;
+  
+  // إشعارات فورية حسب الحالة
+  const activeBatches = batchesCache.filter(b => b.qty > 0);
+  const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0);
+  const critical = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 7; });
+  
+  if (expired.length > 0) {
+    setTimeout(() => {
+      new Notification('🚨 أدوية منتهية الصلاحية!', {
+        body: `${expired.length} دواء منتهي. افتح التطبيق للمراجعة.`,
+        icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
+      });
+    }, 2000);
+  }
+
+  if (critical.length > 0) {
+    setTimeout(() => {
+      new Notification('⚠️ أدوية تنتهي قريبًا', {
+        body: `${critical.length} دواء سينتهي خلال 7 أيام.`,
+        icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
+      });
+    }, 5000);
+  }
+}
+
+// ============================================================
+// Dark Mode
+// ============================================================
 function toggleDark() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -816,6 +1077,305 @@ function toggleDark() {
 
 if (localStorage.getItem('darkMode') === '1') { document.body.classList.add('dark'); }
 
+// ============================================================
+// Notifications (In-App)
+// ============================================================
+function initNotifications() {
+  notifications = [];
+  const activeBatches = batchesCache.filter(b => b.qty > 0);
+  
+  const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0);
+  expired.slice(0, 3).forEach(b => {
+    notifications.push({
+      id: 'exp-' + b.id, type: 'expired', icon: '🚨',
+      title: 'دواء منتهي',
+      message: `${b.name} — منتهي منذ ${Math.abs(daysUntilExpiry(b.expiry))} يوم`,
+      time: new Date().toISOString(), read: false
+    });
+  });
+
+  const critical = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; });
+  critical.slice(0, 3).forEach(b => {
+    notifications.push({
+      id: 'crit-' + b.id, type: 'critical', icon: '⚠️',
+      title: 'دواء سينتهي قريبًا',
+      message: `${b.name} — متبقي ${daysUntilExpiry(b.expiry)} يوم`,
+      time: new Date().toISOString(), read: false
+    });
+  });
+
+  if (activeBatches.length > 0) {
+    const total = activeBatches.length;
+    const safe = activeBatches.filter(b => daysUntilExpiry(b.expiry) > 90).length;
+    const health = Math.round((safe / total) * 100);
+    if (health < 50) {
+      notifications.push({
+        id: 'health-' + Date.now(), type: 'health', icon: '💊',
+        title: 'صحة مخزونك منخفضة',
+        message: `صحة المخزون: ${health}% — يحتاج تحسين`,
+        time: new Date().toISOString(), read: false
+      });
+    }
+  }
+
+  notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('notif-badge');
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+
+  const list = document.getElementById('notif-list');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="p-8 text-center text-slate-500"><div class="text-5xl mb-3">✨</div><p class="font-bold">لا توجد إشعارات</p></div>';
+    return;
+  }
+
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotifRead('${n.id}')">
+      <div class="flex gap-3">
+        <div class="text-2xl flex-shrink-0">${n.icon}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-sm">${esc(n.title)}</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words">${esc(n.message)}</div>
+          <div class="text-xs text-slate-400 mt-1">${new Date(n.time).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function markNotifRead(id) {
+  const n = notifications.find(x => x.id === id);
+  if (n) { n.read = true; renderNotifications(); }
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.read = true);
+  renderNotifications();
+  showToast('✅ تم تعليم كل الإشعارات كمقروءة', 'success');
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  notifPanelOpen = !notifPanelOpen;
+  panel.classList.toggle('hidden', !notifPanelOpen);
+}
+
+// ============================================================
+// Categories
+// ============================================================
+async function loadCategories() {
+  const { data, error } = await supabaseClient.from('medicine_categories').select('*').order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  categoriesCache = data || [];
+  renderCategoriesUI();
+}
+
+async function addCategory(e) {
+  e.preventDefault();
+  const name = document.getElementById('cat-name').value.trim();
+  const color = document.getElementById('cat-color').value;
+  if (!name) { showToast('⚠️ اسم التصنيف مطلوب', 'warning'); return; }
+  
+  const { error } = await supabaseClient.from('medicine_categories').insert({ name, color });
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
+  
+  e.target.reset();
+  document.getElementById('cat-color').value = '#0d9488';
+  await loadCategories();
+  showToast('✅ تم إضافة التصنيف!', 'success');
+}
+
+async function deleteCategory(id) {
+  if (!confirm('حذف هذا التصنيف؟ (الأدوية لن تُحذف)')) return;
+  const { error } = await supabaseClient.from('medicine_categories').delete().eq('id', id);
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
+  await loadCategories();
+  showToast('✅ تم الحذف', 'success');
+}
+
+function renderCategoriesUI() {
+  const list = document.getElementById('categories-list');
+  const count = document.getElementById('categories-count');
+  if (!list) return;
+  count.textContent = categoriesCache.length;
+
+  // تحديث قوائم الاختيار
+  const catSelect = document.getElementById('f-category');
+  if (catSelect) {
+    const current = catSelect.value;
+    catSelect.innerHTML = '<option value="غير مصنّف">غير مصنّف</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  }
+  const advCat = document.getElementById('adv-search-category');
+  if (advCat) {
+    const current = advCat.value;
+    advCat.innerHTML = '<option value="all">كل التصنيفات</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  }
+
+  if (!categoriesCache.length) {
+    list.innerHTML = '<p class="text-slate-500 col-span-3 text-center py-8">لا توجد تصنيفات. أضف تصنيفًا جديدًا.</p>';
+    return;
+  }
+
+  list.innerHTML = categoriesCache.map(c => {
+    const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length;
+    return `<div class="glass p-4 rounded-xl flex justify-between items-center">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span>
+          <span class="font-bold">${esc(c.name)}</span>
+        </div>
+        <div class="text-xs text-slate-500 mt-1">${countBatches} دواء</div>
+      </div>
+      <button onclick="deleteCategory('${c.id}')" class="text-red-500 text-xs font-bold">حذف</button>
+    </div>`;
+  }).join('');
+
+  // إحصائيات التصنيفات
+  const stats = document.getElementById('categories-stats');
+  if (stats) {
+    if (!categoriesCache.length) {
+      stats.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد تصنيفات بعد.</p>';
+    } else {
+      const totalBatches = batchesCache.filter(b => b.qty > 0).length;
+      stats.innerHTML = categoriesCache.map(c => {
+        const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length;
+        const percentage = totalBatches > 0 ? Math.round((countBatches / totalBatches) * 100) : 0;
+        return `<div class="mb-3">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-sm flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span>
+              ${esc(c.name)}
+            </span>
+            <span class="text-sm text-slate-500">${countBatches} دواء (${percentage}%)</span>
+          </div>
+          <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+            <div class="h-2 rounded-full transition-all" style="width: ${percentage}%; background: ${c.color};"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ============================================================
+// Advanced Search
+// ============================================================
+function toggleStatusFilter(status) {
+  currentStatusFilter = status;
+  document.querySelectorAll('.filter-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+  renderAdvancedSearch();
+}
+
+function resetAdvancedSearch() {
+  document.getElementById('adv-search-input').value = '';
+  document.getElementById('adv-search-branch').value = 'all';
+  document.getElementById('adv-search-category').value = 'all';
+  document.getElementById('adv-search-supplier').value = 'all';
+  document.getElementById('adv-min-price').value = '';
+  document.getElementById('adv-max-price').value = '';
+  currentStatusFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.status === 'all'));
+  renderAdvancedSearch();
+}
+
+function renderAdvancedSearch() {
+  const q = (document.getElementById('adv-search-input')?.value || '').toLowerCase();
+  const branch = document.getElementById('adv-search-branch')?.value || 'all';
+  const category = document.getElementById('adv-search-category')?.value || 'all';
+  const supplier = document.getElementById('adv-search-supplier')?.value || 'all';
+  const minPrice = parseFloat(document.getElementById('adv-min-price')?.value) || 0;
+  const maxPrice = parseFloat(document.getElementById('adv-max-price')?.value) || Infinity;
+
+  // تحديث قوائم الفروع والموردين
+  const brSelect = document.getElementById('adv-search-branch');
+  if (brSelect) {
+    const cur = brSelect.value;
+    brSelect.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${b.id === cur ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
+  }
+  const supSelect = document.getElementById('adv-search-supplier');
+  if (supSelect) {
+    const sups = [...new Set(batchesCache.map(b => b.supplier).filter(Boolean))];
+    const cur = supSelect.value;
+    supSelect.innerHTML = '<option value="all">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  }
+
+  let results = batchesCache.filter(b => b.qty > 0);
+
+  if (q) {
+    results = results.filter(b => 
+      b.name.toLowerCase().includes(q) || 
+      (b.batch || '').toLowerCase().includes(q) ||
+      (b.supplier || '').toLowerCase().includes(q) ||
+      (b.category || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (branch !== 'all') results = results.filter(b => b.branch_id === branch);
+  if (category !== 'all') results = results.filter(b => b.category === category);
+  if (supplier !== 'all') results = results.filter(b => b.supplier === supplier);
+  if (minPrice > 0) results = results.filter(b => Number(b.cost) >= minPrice);
+  if (maxPrice < Infinity) results = results.filter(b => Number(b.cost) <= maxPrice);
+
+  if (currentStatusFilter !== 'all') {
+    results = results.filter(b => {
+      const d = daysUntilExpiry(b.expiry);
+      if (currentStatusFilter === 'expired') return d < 0;
+      if (currentStatusFilter === 'critical') return d >= 0 && d <= 30;
+      if (currentStatusFilter === 'warning') return d > 30 && d <= 60;
+      if (currentStatusFilter === 'watch') return d > 60 && d <= 90;
+      if (currentStatusFilter === 'safe') return d > 90;
+      return true;
+    });
+  }
+
+  results.sort((a, b) => daysUntilExpiry(a.expiry) - daysUntilExpiry(b.expiry));
+
+  const tb = document.getElementById('adv-results-body');
+  const countEl = document.getElementById('adv-results-count');
+  const summaryEl = document.getElementById('adv-results-summary');
+  
+  if (!results.length) {
+    tb.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 p-8">لا توجد نتائج مطابقة.</td></tr>';
+    countEl.textContent = '0';
+    summaryEl.textContent = '';
+    return;
+  }
+
+  const totalValue = results.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+  countEl.textContent = results.length;
+  summaryEl.textContent = `القيمة الإجمالية: ${fmtMoney(totalValue)} ج.م`;
+
+  tb.innerHTML = results.slice(0, 100).map(b => {
+    const d = daysUntilExpiry(b.expiry);
+    const st = getStatus(d);
+    const catColor = getCategoryColor(b.category || 'غير مصنّف');
+    return `<tr class="border-b">
+      <td class="p-3 font-bold">${esc(b.name)}</td>
+      <td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span></td>
+      <td class="p-3 text-xs text-slate-500">${esc(getBranchName(b.branch_id))}</td>
+      <td class="p-3 text-xs text-slate-500">${esc(b.supplier)}</td>
+      <td class="p-3">${b.expiry}</td>
+      <td class="p-3 text-center">${b.qty}</td>
+      <td class="p-3 text-center">${(b.qty * Number(b.cost)).toFixed(0)}</td>
+      <td class="p-3 text-center"><span class="${st.color} text-xs px-2 py-1 rounded-lg font-bold">${st.label}</span></td>
+    </tr>`;
+  }).join('') + (results.length > 100 ? `<tr><td colspan="8" class="text-center text-slate-500 p-3 text-xs">يتم عرض أول 100 نتيجة من ${results.length}</td></tr>` : '');
+}
+
+// ============================================================
+// Auth
+// ============================================================
 function switchAuthTab(tab) {
   ['login','signup'].forEach(t => {
     document.getElementById('form-' + t).classList.toggle('hidden', t !== tab);
@@ -876,8 +1436,7 @@ async function handleSignup(e) {
 
 async function saveFingerprint(userId, fingerprint) {
   try {
-    const { error } = await supabaseClient.from('pharmacies').update({ device_fingerprint: fingerprint }).eq('user_id', userId);
-    if (error) console.error('Fingerprint save error:', error);
+    await supabaseClient.from('pharmacies').update({ device_fingerprint: fingerprint }).eq('user_id', userId);
   } catch (err) { console.error('saveFingerprint:', err); }
 }
 
@@ -885,7 +1444,7 @@ async function resendVerification() {
   if (!pendingVerificationEmail) { alert('يرجى العودة لصفحة التسجيل.'); return; }
   const { error } = await supabaseClient.auth.resend({ type: 'signup', email: pendingVerificationEmail });
   if (error) { alert('خطأ: ' + error.message); return; }
-  alert('✅ تم إعادة إرسال البريد. تحقق من صندوق الوارد.');
+  showToast('✅ تم إعادة إرسال البريد.', 'success');
 }
 
 function cancelVerification() {
@@ -913,6 +1472,9 @@ function translateAuthError(msg) {
   return map[msg] || msg;
 }
 
+// ============================================================
+// Data Loading
+// ============================================================
 async function loadPharmacy() {
   const { data, error } = await supabaseClient.from('pharmacies').select('*').maybeSingle();
   if (error) { console.error(error); return; }
@@ -954,34 +1516,38 @@ function onBranchFilterChange() {
   renderAll();
 }
 
+// ============================================================
+// Branches CRUD
+// ============================================================
 async function addBranch(e) {
   e.preventDefault();
-  if (isAccountLocked) { alert('⚠️ حسابك مقفل. جدّد اشتراكك.'); return; }
+  if (isAccountLocked) { showToast('⚠️ حسابك مقفل.', 'warning'); return; }
   const newBranch = {
     name: document.getElementById('b-name').value.trim(),
     phone: document.getElementById('b-phone').value.trim(),
     address: document.getElementById('b-address').value.trim(),
     is_main: false
   };
-  if (!newBranch.name) { alert('اسم الفرع مطلوب.'); return; }
+  if (!newBranch.name) { showToast('⚠️ اسم الفرع مطلوب.', 'warning'); return; }
   const { error } = await supabaseClient.from('branches').insert(newBranch);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   e.target.reset();
   await loadBranches();
-  alert('✅ تم إضافة الفرع!');
+  showToast('✅ تم إضافة الفرع!', 'success');
 }
 
 async function deleteBranch(id) {
   const branch = branchesCache.find(b => b.id === id);
-  if (branch?.is_main) { alert('لا يمكن حذف الفرع الرئيسي.'); return; }
+  if (branch?.is_main) { showToast('⚠️ لا يمكن حذف الفرع الرئيسي.', 'warning'); return; }
   const count = batchesCache.filter(b => b.branch_id === id).length;
   const msg = count > 0 ? `هذا الفرع يحتوي على ${count} دواء. متابعة؟` : 'حذف هذا الفرع؟';
   if (!confirm(msg)) return;
   const { error } = await supabaseClient.from('branches').delete().eq('id', id);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   if (currentBranchFilter === id) currentBranchFilter = 'all';
   await loadBranches();
   await loadBatches();
+  showToast('✅ تم حذف الفرع', 'success');
 }
 
 async function renameBranch(id) {
@@ -990,10 +1556,10 @@ async function renameBranch(id) {
   const newName = prompt('اسم الفرع الجديد:', branch.name);
   if (!newName || !newName.trim()) return;
   const { error } = await supabaseClient.from('branches').update({ name: newName.trim() }).eq('id', id);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadBranches();
   await loadBatches();
-  alert('✅ تم التعديل!');
+  showToast('✅ تم التعديل!', 'success');
 }
 
 function renderBranchesList() {
@@ -1025,14 +1591,18 @@ function renderBranchesList() {
   }).join('');
 }
 
+// ============================================================
+// Medicine CRUD
+// ============================================================
 async function addMedicine(e) {
   e.preventDefault();
-  if (isAccountLocked) { alert('⚠️ حسابك مقفل. جدّد اشتراكك للاستمرار في إضافة الأدوية.'); return; }
+  if (isAccountLocked) { showToast('⚠️ حسابك مقفل.', 'warning'); return; }
   const branchId = document.getElementById('f-branch').value;
-  if (!branchId) { alert('اختر الفرع أولًا.'); return; }
+  if (!branchId) { showToast('⚠️ اختر الفرع أولًا.', 'warning'); return; }
   const newBatch = {
     branch_id: branchId,
     name: document.getElementById('f-name').value.trim(),
+    category: document.getElementById('f-category').value || 'غير مصنّف',
     batch: document.getElementById('f-batch').value.trim(),
     expiry: document.getElementById('f-expiry').value,
     qty: parseInt(document.getElementById('f-qty').value),
@@ -1040,20 +1610,24 @@ async function addMedicine(e) {
     supplier: document.getElementById('f-supplier').value.trim() || 'غير محدد'
   };
   const { error } = await supabaseClient.from('batches').insert(newBatch);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   e.target.reset();
   await loadBatches();
   showTab('inventory');
-  alert('✅ تم حفظ الدفعة!');
+  showToast('✅ تم حفظ الدفعة!', 'success');
 }
 
 async function deleteBatch(id) {
   if (!confirm('حذف هذه الدفعة؟')) return;
   const { error } = await supabaseClient.from('batches').delete().eq('id', id);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadBatches();
+  showToast('✅ تم الحذف', 'success');
 }
 
+// ============================================================
+// Rendering
+// ============================================================
 function renderStats() {
   const a = getFilteredBatches().filter(b => b.qty > 0);
   let s30=0, s60=0, val=0;
@@ -1081,10 +1655,14 @@ function renderAlerts() {
     else { cls = 'alert-watch'; badgeCls = 'badge-watch'; badgeLabel = 'مراقبة'; }
     const dt = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `متبقي ${b.days} يوم`;
     const branchName = branchesCache.length > 1 ? ` | فرع: <b>${esc(getBranchName(b.branch_id))}</b>` : '';
+    const catColor = getCategoryColor(b.category || 'غير مصنّف');
     return `<div class="alert-card ${cls} animate-fade-in">
       <div class="flex justify-between items-start flex-wrap gap-2">
         <div>
-          <div class="alert-name font-black text-lg">${esc(b.name)}</div>
+          <div class="alert-name font-black text-lg flex items-center gap-2 flex-wrap">
+            ${esc(b.name)}
+            <span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span>
+          </div>
           <div class="alert-meta text-sm mt-1">تشغيلة: ${esc(b.batch)}${branchName} | كمية: <b>${b.qty}</b> | قيمة: <b>${(b.qty*b.cost).toFixed(2)} ج.م</b> | مورد: ${esc(b.supplier)}</div>
         </div>
         <div class="text-left">
@@ -1100,13 +1678,15 @@ function renderInventory() {
   const s = (document.getElementById('search-input')?.value || '').toLowerCase();
   const b = getFilteredBatches().filter(x => x.name.toLowerCase().includes(s) || (x.batch||'').toLowerCase().includes(s)).sort((a,c) => daysUntilExpiry(a.expiry) - daysUntilExpiry(c.expiry));
   const tb = document.getElementById('inventory-body');
-  if (!b.length) { tb.innerHTML = '<tr><td colspan="9" class="text-center text-slate-500 p-8">لا توجد دفعات.</td></tr>'; return; }
+  if (!b.length) { tb.innerHTML = '<tr><td colspan="10" class="text-center text-slate-500 p-8">لا توجد دفعات.</td></tr>'; return; }
   const showBranch = branchesCache.length > 1;
   tb.innerHTML = b.map(x => {
     const d = daysUntilExpiry(x.expiry), st = getStatus(d);
     const cost = Number(x.cost);
+    const catColor = getCategoryColor(x.category || 'غير مصنّف');
     return `<tr class="border-b">
       <td class="p-3 font-bold">${esc(x.name)}</td>
+      <td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(x.category || 'غير مصنّف')}</span></td>
       ${showBranch ? `<td class="p-3 text-xs text-slate-500">${esc(getBranchName(x.branch_id))}</td>` : '<td class="p-3 text-xs text-slate-500">—</td>'}
       <td class="p-3 text-slate-500">${esc(x.batch)}</td>
       <td class="p-3">${x.expiry}</td>
@@ -1119,56 +1699,232 @@ function renderInventory() {
   }).join('');
 }
 
-function renderAll() { renderStats(); renderAlerts(); renderInventory(); }
+function renderAll() { renderStats(); renderAlerts(); renderInventory(); initNotifications(); }
 
-// === ANALYTICS ===
-function renderAnalytics() {
-  if (!batchesCache.length && !branchesCache.length) {
-    return;
+// ============================================================
+// Export to Excel
+// ============================================================
+function exportAnalyticsToExcel() {
+  if (!batchesCache.length) { showToast('⚠️ لا توجد بيانات للتصدير.', 'warning'); return; }
+  try {
+    const activeBatches = batchesCache.filter(b => b.qty > 0);
+    const wb = XLSX.utils.book_new();
+
+    const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+    const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
+    const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+    const expiredCount = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
+    const safeCount = activeBatches.length - riskBatches.length;
+    const rescueRate = activeBatches.length > 0 ? Math.round((safeCount / activeBatches.length) * 100) : 0;
+
+    const summaryData = [
+      ['📊 تقرير صلاحية — ملخص التحليلات'],
+      ['التاريخ', new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })],
+      ['اسم الصيدلية', currentPharmacy?.name || '—'],
+      [''],
+      ['المؤشر', 'القيمة'],
+      ['إجمالي الدفعات', activeBatches.length],
+      ['إجمالي قيمة المخزون (ج.م)', totalValue.toFixed(2)],
+      ['عدد الأدوية المعرّضة للخطر (≤90 يوم)', riskBatches.length],
+      ['قيمة الأدوية المعرّضة للخطر (ج.م)', riskValue.toFixed(2)],
+      ['عدد الأدوية المنتهية', expiredCount],
+      ['عدد الأدوية السليمة', safeCount],
+      ['نسبة الإنقاذ (%)', rescueRate + '%'],
+      ['عدد الفروع', branchesCache.length]
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    ws1['!cols'] = [{ wch: 35 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, ws1, 'ملخص');
+
+    const inventoryData = [['اسم الدواء', 'التصنيف', 'الفرع', 'رقم التشغيلة', 'تاريخ الانتهاء', 'الكمية', 'سعر التكلفة', 'القيمة الإجمالية', 'المورد', 'الأيام المتبقية', 'الحالة']];
+    activeBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) })).sort((a, b) => a.days - b.days).forEach(b => {
+      const status = b.days < 0 ? 'منتهي' : b.days <= 30 ? 'خطر' : b.days <= 60 ? 'تحذير' : b.days <= 90 ? 'مراقبة' : 'سليم';
+      inventoryData.push([b.name, b.category || 'غير مصنّف', getBranchName(b.branch_id), b.batch || '—', b.expiry, b.qty, b.cost.toFixed(2), (b.qty * b.cost).toFixed(2), b.supplier || '—', b.days, status]);
+    });
+    const ws2 = XLSX.utils.aoa_to_sheet(inventoryData);
+    ws2['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 20 }, { wch: 14 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'المخزون');
+
+    const categoryMap = {};
+    activeBatches.forEach(b => {
+      const c = b.category || 'غير مصنّف';
+      if (!categoryMap[c]) categoryMap[c] = { count: 0, value: 0 };
+      categoryMap[c].count++;
+      categoryMap[c].value += b.qty * Number(b.cost);
+    });
+    const categoriesData = [['التصنيف', 'عدد الأدوية', 'القيمة (ج.م)']];
+    Object.entries(categoryMap).forEach(([name, data]) => categoriesData.push([name, data.count, data.value.toFixed(2)]));
+    const ws3 = XLSX.utils.aoa_to_sheet(categoriesData);
+    ws3['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws3, 'التصنيفات');
+
+    const supplierMap = {};
+    activeBatches.forEach(b => {
+      const s = b.supplier || 'غير محدد';
+      if (!supplierMap[s]) supplierMap[s] = { count: 0, value: 0, riskCount: 0 };
+      supplierMap[s].count++;
+      supplierMap[s].value += b.qty * Number(b.cost);
+      if (daysUntilExpiry(b.expiry) <= 90) supplierMap[s].riskCount++;
+    });
+    const suppliersData = [['المورد', 'عدد الأدوية', 'القيمة الإجمالية (ج.م)', 'عدد المعرّض للخطر']];
+    Object.entries(supplierMap).sort((a, b) => b[1].value - a[1].value).forEach(([name, data]) => suppliersData.push([name, data.count, data.value.toFixed(2), data.riskCount]));
+    const ws4 = XLSX.utils.aoa_to_sheet(suppliersData);
+    ws4['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 22 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws4, 'الموردين');
+
+    const branchesData = [['الفرع', 'عدد الأدوية', 'القيمة الإجمالية (ج.م)', 'عدد المعرّض للخطر', 'صحة الفرع (%)']];
+    branchesCache.forEach(br => {
+      const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0);
+      const count = brBatches.length;
+      const value = brBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length;
+      const health = count > 0 ? Math.round(((count - risk) / count) * 100) : 100;
+      branchesData.push([br.name, count, value.toFixed(2), risk, health + '%']);
+    });
+    const ws5 = XLSX.utils.aoa_to_sheet(branchesData);
+    ws5['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 22 }, { wch: 20 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, ws5, 'الفروع');
+
+    const pharmacyName = (currentPharmacy?.name || 'salahiya').replace(/[^\u0600-\u06FF\w]/g, '_');
+    const fileName = `salahiya-analytics-${pharmacyName}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    showToast('✅ تم تصدير التحليلات بنجاح!', 'success');
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('❌ حدث خطأ أثناء التصدير', 'error');
   }
+}
+
+// ============================================================
+// PDF Generation
+// ============================================================
+function generateAdvancedPDF(type) {
+  if (!batchesCache.length) { showToast('⚠️ لا توجد بيانات.', 'warning'); return; }
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const activeBatches = batchesCache.filter(b => b.qty > 0);
+    const pharmacy = currentPharmacy || {};
+
+    if (type === 'analytics') {
+      doc.setFontSize(20);
+      doc.setTextColor(13, 148, 136);
+      doc.text('Salahiya', 105, 15, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setTextColor(51, 51, 51);
+      doc.text('Analytics Report', 105, 24, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(pharmacy.name || 'Pharmacy', 105, 30, { align: 'center' });
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 105, 35, { align: 'center' });
+
+      const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
+      const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const safeCount = activeBatches.length - riskBatches.length;
+      const rescueRate = activeBatches.length > 0 ? Math.round((safeCount / activeBatches.length) * 100) : 0;
+
+      doc.setFontSize(12);
+      doc.setTextColor(13, 148, 136);
+      doc.text('Key Metrics', 105, 48, { align: 'center' });
+
+      doc.autoTable({
+        startY: 52,
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Batches', activeBatches.length.toString()],
+          ['Total Value (EGP)', totalValue.toFixed(0)],
+          ['Batches at Risk', riskBatches.length.toString()],
+          ['Value at Risk (EGP)', riskValue.toFixed(0)],
+          ['Rescue Rate', rescueRate + '%']
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 10 },
+        bodyStyles: { fontSize: 10 },
+        styles: { halign: 'left' }
+      });
+
+      doc.save(`salahiya-analytics-${Date.now()}.pdf`);
+      showToast('✅ تم تحميل التقرير!', 'success');
+    } else if (type === 'supplier-report') {
+      const range = parseInt(document.getElementById('p-range').value);
+      const sup = document.getElementById('p-supplier').value;
+      const pBranch = document.getElementById('p-branch').value;
+      let source = batchesCache;
+      if (pBranch !== 'all') source = source.filter(b => b.branch_id === pBranch);
+      let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) }));
+      list = list.filter(b => b.days <= range);
+      if (sup) list = list.filter(b => b.supplier === sup);
+      list.sort((a, b) => a.days - b.days);
+
+      if (!list.length) { showToast('⚠️ لا توجد أدوية مطابقة.', 'warning'); return; }
+
+      doc.setFontSize(18);
+      doc.setTextColor(13, 148, 136);
+      doc.text(pharmacy.name || 'Pharmacy', 105, 15, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setTextColor(51, 51, 51);
+      doc.text('Supplier Return Report', 105, 24, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      if (pharmacy.phone) doc.text(`Phone: ${pharmacy.phone}`, 105, 30, { align: 'center' });
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 105, 35, { align: 'center' });
+
+      doc.autoTable({
+        startY: 42,
+        head: [['#', 'Medicine', 'Batch', 'Expiry', 'Qty', 'Cost', 'Total', 'Days']],
+        body: list.map((b, i) => [(i + 1).toString(), b.name, b.batch || '—', b.expiry, b.qty.toString(), b.cost.toFixed(2), (b.qty * b.cost).toFixed(2), b.days < 0 ? `Exp ${Math.abs(b.days)}d` : `${b.days}d`]),
+        theme: 'striped',
+        headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        styles: { halign: 'center' },
+        columnStyles: { 1: { halign: 'left', cellWidth: 50 } }
+      });
+
+      doc.save(`salahiya-supplier-${Date.now()}.pdf`);
+      showToast('✅ تم تحميل التقرير!', 'success');
+    }
+  } catch (err) {
+    console.error('PDF error:', err);
+    showToast('❌ حدث خطأ في إنشاء PDF', 'error');
+  }
+}
+
+// ============================================================
+// Analytics
+// ============================================================
+function renderAnalytics() {
+  if (!batchesCache.length && !branchesCache.length) return;
 
   const activeBatches = batchesCache.filter(b => b.qty > 0);
   const now = new Date();
 
-  // === KPI Cards ===
   const total = activeBatches.length;
   const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
   const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
   const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-  
+
   document.getElementById('kpi-total').textContent = fmtNum(total);
   document.getElementById('kpi-total-sub').textContent = `${branchesCache.length} فرع`;
-
   document.getElementById('kpi-value').textContent = fmtMoney(totalValue);
   document.getElementById('kpi-value-sub').textContent = 'إجمالي قيمة المخزون';
-
   document.getElementById('kpi-risk').textContent = fmtMoney(riskValue);
   document.getElementById('kpi-risk-sub').textContent = `${riskBatches.length} دواء معرّض`;
 
-  // نسبة الإنقاذ
   const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
   const safe = total - riskBatches.length;
   const rescueRate = total > 0 ? Math.round((safe / total) * 100) : 0;
   document.getElementById('kpi-rescue').textContent = rescueRate + '%';
   document.getElementById('kpi-rescue-sub').textContent = `${safe} دواء سليم`;
 
-  // === Health Score ===
-  // احسب نقاط بناءً على:
-  // - نسبة الأدوية السليمة (40%)
-  // - نسبة الأدوية المنتهية (30%)
-  // - نسبة الأدوية الخطر (30%)
   const safeRatio = total > 0 ? safe / total : 1;
   const expiredRatio = total > 0 ? expired / total : 0;
   const criticalRatio = total > 0 ? activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; }).length / total : 0;
-  
-  const healthScore = Math.round(
-    (safeRatio * 40) + 
-    ((1 - expiredRatio) * 30) + 
-    ((1 - criticalRatio) * 30)
-  );
+  const healthScore = Math.round((safeRatio * 40) + ((1 - expiredRatio) * 30) + ((1 - criticalRatio) * 30));
 
   const healthArc = document.getElementById('health-arc');
-  const circumference = 2 * Math.PI * 70; // 439.8
+  const circumference = 2 * Math.PI * 70;
   const offset = circumference - (healthScore / 100) * circumference;
   healthArc.style.strokeDashoffset = offset;
 
@@ -1178,7 +1934,7 @@ function renderAnalytics() {
   else if (healthScore >= 40) { healthColor = '#eab308'; healthLabel = 'متوسط ⚠️'; healthDesc = 'يحتاج بعض التحسين'; }
   else if (healthScore >= 20) { healthColor = '#f97316'; healthLabel = 'ضعيف 😟'; healthDesc = 'يحتاج تحسين عاجل'; }
   else { healthColor = '#ef4444'; healthLabel = 'خطر 🚨'; healthDesc = 'حالة حرجة!'; }
-  
+
   healthArc.style.stroke = healthColor;
   document.getElementById('health-score').textContent = healthScore;
   document.getElementById('health-score').style.color = healthColor;
@@ -1186,12 +1942,10 @@ function renderAnalytics() {
   document.getElementById('health-label').style.color = healthColor;
   document.getElementById('health-desc').textContent = healthDesc;
 
-  // === Charts ===
   const isDark = document.body.classList.contains('dark');
   const gridColor = isDark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)';
   const textColor = isDark ? '#cbd5e1' : '#475569';
 
-  // Distribution (Doughnut)
   const expiredC = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
   const criticalC = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; }).length;
   const warningC = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d > 30 && d <= 60; }).length;
@@ -1202,44 +1956,19 @@ function renderAnalytics() {
   const ctxDist = document.getElementById('chart-distribution').getContext('2d');
   chartDistribution = new Chart(ctxDist, {
     type: 'doughnut',
-    data: {
-      labels: ['منتهي', 'خطر (≤30)', 'تحذير (≤60)', 'مراقبة (≤90)', 'سليم'],
-      datasets: [{
-        data: [expiredC, criticalC, warningC, watchC, safeC],
-        backgroundColor: ['#b91c1c', '#ef4444', '#f97316', '#eab308', '#22c55e'],
-        borderWidth: 2,
-        borderColor: isDark ? '#0f172a' : '#ffffff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Cairo', size: 12 }, padding: 12, usePointStyle: true } },
-        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true }
-      },
-      cutout: '65%'
-    }
+    data: { labels: ['منتهي', 'خطر', 'تحذير', 'مراقبة', 'سليم'], datasets: [{ data: [expiredC, criticalC, warningC, watchC, safeC], backgroundColor: ['#b91c1c', '#ef4444', '#f97316', '#eab308', '#22c55e'], borderWidth: 2, borderColor: isDark ? '#0f172a' : '#ffffff' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Cairo', size: 12 }, padding: 12, usePointStyle: true } }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true } }, cutout: '65%' }
   });
 
-  // Trend (Line) - 6 months
-  const months = [];
-  const monthLabels = [];
+  const months = [], monthLabels = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     months.push(d);
     monthLabels.push(d.toLocaleDateString('ar-EG', { month: 'long' }));
   }
-
   const rescuedData = months.map(m => {
     const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0);
-    const monthStart = new Date(m.getFullYear(), m.getMonth(), 1);
-    return activeBatches.filter(b => {
-      const exp = new Date(b.expiry);
-      const created = new Date(b.created_at);
-      // الأدوية التي أُضيفت قبل الشهر الحالي ولم تنتهِ صلاحيتها (اعتبر منقذة)
-      return created < monthEnd && exp > monthEnd;
-    }).length;
+    return activeBatches.filter(b => { const exp = new Date(b.expiry); const created = new Date(b.created_at); return created < monthEnd && exp > monthEnd; }).length;
   });
 
   if (chartTrend) chartTrend.destroy();
@@ -1247,40 +1976,12 @@ function renderAnalytics() {
   const gradient = ctxTrend.createLinearGradient(0, 0, 0, 280);
   gradient.addColorStop(0, 'rgba(13, 148, 136, 0.4)');
   gradient.addColorStop(1, 'rgba(13, 148, 136, 0.0)');
-
   chartTrend = new Chart(ctxTrend, {
     type: 'line',
-    data: {
-      labels: monthLabels,
-      datasets: [{
-        label: 'أدوية محمية',
-        data: rescuedData,
-        borderColor: '#0d9488',
-        backgroundColor: gradient,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#0d9488',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 } } },
-        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 }, stepSize: 1 } }
-      }
-    }
+    data: { labels: monthLabels, datasets: [{ label: 'أدوية محمية', data: rescuedData, borderColor: '#0d9488', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#0d9488', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 }, stepSize: 1 } } } }
   });
 
-  // Suppliers (Bar)
   const supplierMap = {};
   activeBatches.forEach(b => {
     const s = b.supplier || 'غير محدد';
@@ -1294,43 +1995,40 @@ function renderAnalytics() {
   const ctxSup = document.getElementById('chart-suppliers').getContext('2d');
   chartSuppliers = new Chart(ctxSup, {
     type: 'bar',
+    data: { labels: topSuppliers.map(s => s[0].length > 15 ? s[0].substring(0, 15) + '...' : s[0]), datasets: [{ label: 'القيمة (ج.م)', data: topSuppliers.map(s => s[1].value), backgroundColor: ['#0d9488', '#14b8a6', '#06b6d4', '#22d3ee', '#5eead4'], borderRadius: 8, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } } }
+  });
+
+  // Categories Chart
+  const categoryMap = {};
+  activeBatches.forEach(b => {
+    const c = b.category || 'غير مصنّف';
+    if (!categoryMap[c]) categoryMap[c] = 0;
+    categoryMap[c] += b.qty * Number(b.cost);
+  });
+  const topCategories = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+  if (chartCategories) chartCategories.destroy();
+  const ctxCat = document.getElementById('chart-categories').getContext('2d');
+  chartCategories = new Chart(ctxCat, {
+    type: 'bar',
     data: {
-      labels: topSuppliers.map(s => s[0].length > 15 ? s[0].substring(0, 15) + '...' : s[0]),
-      datasets: [{
-        label: 'القيمة (ج.م)',
-        data: topSuppliers.map(s => s[1].value),
-        backgroundColor: ['#0d9488', '#14b8a6', '#06b6d4', '#22d3ee', '#5eead4'],
-        borderRadius: 8,
-        borderSkipped: false
-      }]
+      labels: topCategories.map(c => c[0]),
+      datasets: [{ label: 'القيمة (ج.م)', data: topCategories.map(c => c[1]), backgroundColor: topCategories.map(c => getCategoryColor(c[0]) || '#0d9488'), borderRadius: 8, borderSkipped: false }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: { display: false },
-        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 }
-      },
-      scales: {
-        x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } },
-        y: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } },
+      scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } }
     }
   });
 
-  // Top Risk List
-  const topRisk = riskBatches
-    .map(b => ({ ...b, days: daysUntilExpiry(b.expiry), value: b.qty * Number(b.cost) }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-
+  const topRisk = riskBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), value: b.qty * Number(b.cost) })).sort((a, b) => b.value - a.value).slice(0, 5);
   const riskList = document.getElementById('top-risk-list');
   if (!topRisk.length) {
     riskList.innerHTML = '<p class="text-slate-500 text-center py-8">✅ لا توجد أدوية معرّضة للخطر</p>';
   } else {
     riskList.innerHTML = topRisk.map((b, i) => {
-      const st = getStatus(b.days);
       const daysText = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `${b.days} يوم`;
       return `<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-r-4" style="border-color: ${b.days < 0 ? '#b91c1c' : b.days <= 30 ? '#ef4444' : b.days <= 60 ? '#f97316' : '#eab308'};">
         <div class="text-2xl font-black text-slate-400">#${i + 1}</div>
@@ -1346,20 +2044,17 @@ function renderAnalytics() {
     }).join('');
   }
 
-  // Branch Analytics
   if (branchesCache.length > 1) {
     document.getElementById('branch-analytics-container').classList.remove('hidden');
     const tb = document.getElementById('branch-analytics-body');
     tb.innerHTML = branchesCache.map(br => {
-      const branchBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0);
-      const count = branchBatches.length;
-      const value = branchBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-      const risk = branchBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length;
+      const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0);
+      const count = brBatches.length;
+      const value = brBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length;
       const safeRatio = count > 0 ? (count - risk) / count : 1;
       const branchHealth = Math.round(safeRatio * 100);
-      
-      let healthColor = branchHealth >= 80 ? 'text-green-500' : branchHealth >= 60 ? 'text-lime-500' : branchHealth >= 40 ? 'text-yellow-500' : 'text-red-500';
-      
+      const healthColor = branchHealth >= 80 ? 'text-green-500' : branchHealth >= 60 ? 'text-lime-500' : branchHealth >= 40 ? 'text-yellow-500' : 'text-red-500';
       return `<tr class="border-b">
         <td class="p-3 font-bold">${esc(br.name)} ${br.is_main ? '⭐' : ''}</td>
         <td class="p-3 text-center">${count}</td>
@@ -1375,20 +2070,27 @@ function renderAnalytics() {
   document.getElementById('analytics-updated').textContent = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 }
 
+// ============================================================
+// Tabs
+// ============================================================
 function showTab(name) {
-  ['dashboard','analytics','inventory','add','import','branches','report','settings'].forEach(t => {
-    document.getElementById('view-'+t).classList.add('hidden');
+  ['dashboard','analytics','inventory','search','add','import','categories','branches','report','settings'].forEach(t => {
+    const el = document.getElementById('view-'+t);
+    if (el) el.classList.add('hidden');
     const tab = document.getElementById('tab-'+t);
     if (tab) { tab.classList.remove('tab-active'); tab.classList.add('hover:bg-slate-100', 'dark:hover:bg-slate-800'); }
   });
   const activeTab = document.getElementById('tab-'+name);
   if (activeTab) { activeTab.classList.add('tab-active'); activeTab.classList.remove('hover:bg-slate-100', 'dark:hover:bg-slate-800'); }
-  document.getElementById('view-'+name).classList.remove('hidden');
-  document.getElementById('view-'+name).classList.add('animate-fade-in');
+  const view = document.getElementById('view-'+name);
+  if (view) { view.classList.remove('hidden'); view.classList.add('animate-fade-in'); }
   if (name === 'report') refreshSuppliers();
   if (name === 'settings') loadSettingsIntoForm();
   if (name === 'branches') renderBranchesList();
   if (name === 'analytics') setTimeout(renderAnalytics, 100);
+  if (name === 'search') setTimeout(renderAdvancedSearch, 100);
+  if (name === 'categories') renderCategoriesUI();
+  if (notifPanelOpen) toggleNotifPanel();
 }
 
 async function loadSettingsIntoForm() {
@@ -1412,7 +2114,7 @@ let tempLogoFile = null;
 document.getElementById('s-logo-input').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 1024 * 1024) { alert('حجم الصورة كبير.'); return; }
+  if (file.size > 1024 * 1024) { showToast('⚠️ حجم الصورة كبير.', 'warning'); return; }
   tempLogoFile = file;
   const reader = new FileReader();
   reader.onload = ev => updateLogoUI(ev.target.result);
@@ -1426,7 +2128,7 @@ async function uploadLogoIfNeeded() {
   const ext = tempLogoFile.name.split('.').pop();
   const path = `${currentUser.id}/logo-${Date.now()}.${ext}`;
   const { error: upErr } = await supabaseClient.storage.from('logos').upload(path, tempLogoFile, { upsert: true });
-  if (upErr) { alert('فشل الرفع: ' + upErr.message); return currentPharmacy.logo_url || ''; }
+  if (upErr) { showToast('❌ فشل الرفع: ' + upErr.message, 'error'); return currentPharmacy.logo_url || ''; }
   const { data } = supabaseClient.storage.from('logos').getPublicUrl(path);
   return data.publicUrl;
 }
@@ -1444,12 +2146,12 @@ async function saveSettings() {
     updated_at: new Date().toISOString()
   };
   const { error } = await supabaseClient.from('pharmacies').update(updates).eq('user_id', currentUser.id);
-  if (error) { alert('خطأ: ' + error.message); btn.disabled = false; btn.textContent = '💾 حفظ الإعدادات'; return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); btn.disabled = false; btn.textContent = '💾 حفظ الإعدادات'; return; }
   currentPharmacy = { ...currentPharmacy, ...updates };
   tempLogoFile = null;
   applyPharmacyToUI();
   btn.disabled = false; btn.textContent = '💾 حفظ الإعدادات';
-  alert('✅ تم الحفظ!');
+  showToast('✅ تم الحفظ!', 'success');
 }
 
 function applyPharmacyToUI() {
@@ -1462,6 +2164,9 @@ function applyPharmacyToUI() {
   document.getElementById('header-subtitle').textContent = sub;
 }
 
+// ============================================================
+// Report
+// ============================================================
 function refreshSuppliers() {
   const sups = [...new Set(getFilteredBatches().map(b => b.supplier).filter(Boolean))];
   const cur = document.getElementById('p-supplier').value;
@@ -1537,8 +2242,11 @@ function buildReport() {
     <div style="margin-top:30px; text-align:center; font-size:10px; color:#999;">تم إعداد التقرير بتاريخ ${today} — ${esc(pharmacy)}</div>`;
   preview.innerHTML = html;
 }
-function doPrint() { try { window.print(); } catch (e) { alert('اضغط Ctrl + P'); } }
+function doPrint() { try { window.print(); } catch (e) { showToast('اضغط Ctrl + P', 'info'); } }
 
+// ============================================================
+// Import
+// ============================================================
 let parsedRows = [], parsedHeaders = [], columnMapping = {};
 let previewData = [], importErrors = [];
 
@@ -1548,7 +2256,8 @@ const FIELD_SYNONYMS = {
   expiry: ['تاريخ الانتهاء','الانتهاء','الصلاحية','expiry','expiry date','exp'],
   qty: ['الكمية','الرصيد','quantity','qty','stock'],
   cost: ['سعر التكلفة','التكلفة','سعر الشراء','cost','price'],
-  supplier: ['المورد','الشركة','الموزع','supplier','vendor','company']
+  supplier: ['المورد','الشركة','الموزع','supplier','vendor','company'],
+  category: ['التصنيف','الفئة','النوع','category','type','class']
 };
 
 function normalizeHeader(h) {
@@ -1618,18 +2327,18 @@ function handleFile(file) {
       const wb = XLSX.read(data, { type: 'array', cellDates: false, raw: true });
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
-      if (!json.length) { alert('الملف فارغ.'); return; }
+      if (!json.length) { showToast('⚠️ الملف فارغ.', 'warning'); return; }
       let hIdx = 0;
       for (let i = 0; i < Math.min(10, json.length); i++) { if (json[i].filter(c => String(c).trim() !== '').length >= 3) { hIdx = i; break; } }
       parsedHeaders = json[hIdx].map(h => String(h).trim());
       parsedRows = json.slice(hIdx + 1).filter(row => row.some(c => String(c).trim() !== ''));
-      if (!parsedRows.length) { alert('لا توجد بيانات.'); return; }
+      if (!parsedRows.length) { showToast('⚠️ لا توجد بيانات.', 'warning'); return; }
       document.getElementById('file-rows-count').textContent = parsedRows.length;
       columnMapping = autoDetect(parsedHeaders);
       renderMappingUI();
       document.getElementById('import-step-1').classList.add('hidden');
       document.getElementById('import-step-2').classList.remove('hidden');
-    } catch (err) { alert('تعذّر القراءة: ' + err.message); }
+    } catch (err) { showToast('❌ تعذّر القراءة: ' + err.message, 'error'); }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -1637,6 +2346,7 @@ function handleFile(file) {
 function renderMappingUI() {
   const fields = [
     { key: 'name', label: 'اسم الدواء *', required: true },
+    { key: 'category', label: 'التصنيف', required: false },
     { key: 'batch', label: 'رقم التشغيلة', required: false },
     { key: 'expiry', label: 'تاريخ الانتهاء *', required: true },
     { key: 'qty', label: 'الكمية *', required: true },
@@ -1661,9 +2371,9 @@ function processImport() {
   if (!columnMapping.expiry) missing.push('تاريخ الانتهاء');
   if (!columnMapping.qty) missing.push('الكمية');
   if (!columnMapping.cost) missing.push('سعر التكلفة');
-  if (missing.length) { alert('يرجى مطابقة: ' + missing.join(', ')); return; }
+  if (missing.length) { showToast('⚠️ يرجى مطابقة: ' + missing.join(', '), 'warning'); return; }
   previewData = []; importErrors = [];
-  const idx = { name: getHeaderIndex(columnMapping.name), batch: getHeaderIndex(columnMapping.batch), expiry: getHeaderIndex(columnMapping.expiry), qty: getHeaderIndex(columnMapping.qty), cost: getHeaderIndex(columnMapping.cost), supplier: getHeaderIndex(columnMapping.supplier) };
+  const idx = { name: getHeaderIndex(columnMapping.name), category: getHeaderIndex(columnMapping.category), batch: getHeaderIndex(columnMapping.batch), expiry: getHeaderIndex(columnMapping.expiry), qty: getHeaderIndex(columnMapping.qty), cost: getHeaderIndex(columnMapping.cost), supplier: getHeaderIndex(columnMapping.supplier) };
   parsedRows.forEach((row, i) => {
     const rowNum = i + 2;
     const name = idx.name >= 0 ? String(row[idx.name] || '').trim() : '';
@@ -1672,13 +2382,14 @@ function processImport() {
     const cost = parseNumber(idx.cost >= 0 ? row[idx.cost] : null);
     const batch = idx.batch >= 0 ? String(row[idx.batch] || '').trim() : '';
     const supplier = idx.supplier >= 0 ? String(row[idx.supplier] || '').trim() : 'غير محدد';
+    const category = idx.category >= 0 ? String(row[idx.category] || '').trim() : 'غير مصنّف';
     const errs = [];
     if (!name) errs.push('اسم فارغ');
     if (!expiry) errs.push('تاريخ غير صالح');
     if (qty == null || qty <= 0) errs.push('كمية غير صالحة');
     if (cost == null || cost < 0) errs.push('تكلفة غير صالحة');
     if (errs.length) { importErrors.push({ row: rowNum, name: name || '—', reason: errs.join('، ') }); return; }
-    previewData.push({ name, batch: batch || 'بدون تشغيلة', expiry, qty: Math.round(qty), cost, supplier: supplier || 'غير محدد', _days: daysUntilExpiry(expiry) });
+    previewData.push({ name, category: category || 'غير مصنّف', batch: batch || 'بدون تشغيلة', expiry, qty: Math.round(qty), cost, supplier: supplier || 'غير محدد', _days: daysUntilExpiry(expiry) });
   });
   renderPreview();
   document.getElementById('import-step-2').classList.add('hidden');
@@ -1722,18 +2433,19 @@ function renderPreview() {
 function backToMapping() { document.getElementById('import-step-3').classList.add('hidden'); document.getElementById('import-step-2').classList.remove('hidden'); }
 
 async function confirmImport() {
-  if (isAccountLocked) { alert('⚠️ حسابك مقفل. جدّد اشتراكك.'); return; }
-  if (!previewData.length) { alert('لا توجد بيانات.'); return; }
+  if (isAccountLocked) { showToast('⚠️ حسابك مقفل.', 'warning'); return; }
+  if (!previewData.length) { showToast('⚠️ لا توجد بيانات.', 'warning'); return; }
   const branchId = document.getElementById('import-branch').value;
-  if (!branchId) { alert('اختر الفرع أولًا.'); return; }
-  if (!confirm(`سيتم إضافة ${previewData.length} دفعة إلى "${getBranchName(branchId)}". متابعة؟`)) return;
-  const rows = previewData.map(r => ({ branch_id: branchId, name: r.name, batch: r.batch, expiry: r.expiry, qty: r.qty, cost: r.cost, supplier: r.supplier }));
+  if (!branchId) { showToast('⚠️ اختر الفرع.', 'warning'); return; }
+  if (!confirm(`سيتم إضافة ${previewData.length} دفعة. متابعة؟`)) return;
+  const rows = previewData.map(r => ({ branch_id: branchId, name: r.name, category: r.category, batch: r.batch, expiry: r.expiry, qty: r.qty, cost: r.cost, supplier: r.supplier }));
   const { error } = await supabaseClient.from('batches').insert(rows);
-  if (error) { alert('خطأ: ' + error.message); return; }
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadBatches();
-  document.getElementById('import-done-msg').textContent = `تم استيراد ${previewData.length} دفعة بنجاح إلى "${getBranchName(branchId)}".`;
+  document.getElementById('import-done-msg').textContent = `تم استيراد ${previewData.length} دفعة بنجاح.`;
   document.getElementById('import-step-3').classList.add('hidden');
   document.getElementById('import-step-4').classList.remove('hidden');
+  showToast('✅ تم الاستيراد بنجاح!', 'success');
 }
 
 function resetImport() {
@@ -1744,13 +2456,15 @@ function resetImport() {
   });
 }
 
+// ============================================================
+// Subscription
+// ============================================================
 function evaluateSubscription() {
   if (!currentPharmacy) return;
   const now = new Date();
   const status = currentPharmacy.subscription_status || 'trial';
   const trialEndsAt = currentPharmacy.trial_ends_at ? new Date(currentPharmacy.trial_ends_at) : null;
   const subEndsAt = currentPharmacy.subscription_ends_at ? new Date(currentPharmacy.subscription_ends_at) : null;
-  const graceEndsAt = currentPharmacy.grace_period_ends_at ? new Date(currentPharmacy.grace_period_ends_at) : null;
   const frozenAt = currentPharmacy.frozen_at ? new Date(currentPharmacy.frozen_at) : null;
   const banner = document.getElementById('status-banner');
   const bannerContainer = document.getElementById('status-banner-container');
@@ -1787,10 +2501,10 @@ function evaluateSubscription() {
 function handleExpired(endsAt) {
   const now = new Date();
   const graceEndsAt = currentPharmacy.grace_period_ends_at ? new Date(currentPharmacy.grace_period_ends_at) : (endsAt ? new Date(endsAt.getTime() + 30 * 24 * 60 * 60 * 1000) : null);
-  if (graceEndsAt && graceEndsAt <= now) { isFrozen = true; isAccountLocked = true; showLockScreen({ icon: '🧊', title: 'حسابك مجمّد', message: 'انتهت فترة السماح (30 يومًا). <b>بياناتك محفوظة</b> لكنها مخفية.<br><br>جدّد لاستعادة كل شيء.', buttonText: '🚀 استعد حسابك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك لاستعادة حسابي.') }); return; }
+  if (graceEndsAt && graceEndsAt <= now) { isFrozen = true; isAccountLocked = true; showLockScreen({ icon: '🧊', title: 'حسابك مجمّد', message: 'انتهت فترة السماح. <b>بياناتك محفوظة</b> لكنها مخفية.', buttonText: '🚀 استعد حسابك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك.') }); return; }
   isAccountLocked = true; isFrozen = false;
   const daysLeft = graceEndsAt ? Math.ceil((graceEndsAt - now) / (1000*60*60*24)) : 30;
-  showLockScreen({ icon: '🔒', title: 'انتهى اشتراكك', message: `<b>بياناتك محفوظة بأمان.</b><br><br>جدّد الآن للاستمرار الكامل.<br><br><small>لديك ${daysLeft} يوم قبل أن يُجمّد حسابك.</small>`, buttonText: '🔄 جدّد الاشتراك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك.') });
+  showLockScreen({ icon: '🔒', title: 'انتهى اشتراكك', message: `<b>بياناتك محفوظة بأمان.</b><br><br>جدّد الآن للاستمرار الكامل.<br><br><small>لديك ${daysLeft} يوم قبل التجميد.</small>`, buttonText: '🔄 جدّد الاشتراك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك.') });
 }
 
 function buildWa2(action) {
@@ -1811,6 +2525,7 @@ function showLockScreen({ icon, title, message, buttonText, waText }) {
 async function initAfterLogin(user) {
   currentUser = user;
   await loadPharmacy();
+  await loadCategories();
   await loadBranches();
   await loadBatches();
   document.getElementById('loading-screen').classList.add('hidden');
