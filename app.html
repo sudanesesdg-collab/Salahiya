@@ -6,13 +6,14 @@
 <title>صلاحية — أنقذ صيدليتك من خسائر الأدوية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   !function(){
     var e = function(){
@@ -33,8 +34,13 @@
   tailwind.config = {
     theme: {
       extend: {
-        fontFamily: { sans: ['Cairo', 'Inter', 'sans-serif'] },
-        animation: { 'float': 'float 6s ease-in-out infinite', 'fade-in': 'fadeIn 0.4s ease-out', 'slide-up': 'slideUp 0.5s ease-out', 'toast-in': 'toastIn 0.4s ease-out' },
+        fontFamily: { sans: ['Cairo', 'sans-serif'] },
+        animation: {
+          'float': 'float 6s ease-in-out infinite',
+          'fade-in': 'fadeIn 0.4s ease-out',
+          'slide-up': 'slideUp 0.5s ease-out',
+          'toast-in': 'toastIn 0.4s ease-out'
+        },
         keyframes: {
           float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
           slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
@@ -46,7 +52,9 @@
   }
 </script>
 <style>
-  body { font-family: 'Cairo', 'Inter', sans-serif; }
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+  
+  body { font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif !important; }
   body { background: radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.06) 0%, transparent 50%), #f8fafc; min-height: 100vh; color: #0f172a; }
   body.dark { background: radial-gradient(circle at 0% 0%, rgba(13, 148, 136, 0.15) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.1) 0%, transparent 50%), #0a0f1c; color: #f1f5f9; }
   .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06); }
@@ -171,8 +179,6 @@
   body.dark .notif-item.unread { background: rgba(13, 148, 136, 0.15); }
   .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 20px; border-radius: 16px; color: white; font-weight: 700; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); z-index: 200; animation: toastIn 0.4s ease-out; max-width: 360px; }
   @keyframes toastIn { '0%': { opacity: 0; transform: translateY(20px) translateX(20px); }, '100%': { opacity: 1; transform: translateY(0) translateX(0); } }
-
-  /* === بحث متقدم === */
   .search-panel { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); margin-bottom: 20px; }
   body.dark .search-panel { background: rgba(15,23,42,0.85); }
   .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
@@ -180,12 +186,18 @@
   .filter-chip.active { background: linear-gradient(135deg, #0d9488, #14b8a6); color: white; box-shadow: 0 4px 14px rgba(13,148,136,0.3); }
   .filter-chip:not(.active) { background: #f1f5f9; color: #475569; }
   body.dark .filter-chip:not(.active) { background: #334155; color: #cbd5e1; }
-
-  /* === تصنيفات === */
   .category-badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; color: white; }
   .category-manager { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); margin-bottom: 20px; }
   body.dark .category-manager { background: rgba(15,23,42,0.85); }
-
+  .low-stock-row { background: rgba(254, 226, 226, 0.5) !important; }
+  body.dark .low-stock-row { background: rgba(127, 29, 29, 0.3) !important; }
+  .low-stock-badge { display: inline-block; background: #ef4444; color: white; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 6px; animation: pulse 2s infinite; }
+  .unit-badge { display: inline-block; background: #e2e8f0; color: #475569; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  body.dark .unit-badge { background: #334155; color: #cbd5e1; }
+  #barcode-reader { border-radius: 16px; overflow: hidden; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  .modal-content { background: white; border-radius: 24px; padding: 32px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
+  body.dark .modal-content { background: #0f172a; }
   @media (max-width: 640px) {
     #report-preview table { font-size: 9px; }
     #report-preview table th, #report-preview table td { padding: 4px 2px !important; }
@@ -204,7 +216,6 @@
   </div>
 </div>
 
-<!-- Auth Screen -->
 <div id="auth-screen" class="hidden min-h-screen items-center justify-center p-4 relative overflow-hidden">
   <div class="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #0d9488, #14b8a6);"></div>
   <div class="absolute bottom-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-20" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);"></div>
@@ -282,6 +293,7 @@
 
 <div id="app" class="hidden">
 
+
 <header class="glass sticky top-0 z-40 border-b border-white/50 dark:border-slate-700/50 no-print">
   <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-3">
     <div class="flex items-center gap-3">
@@ -314,7 +326,6 @@
   </div>
 </header>
 
-<!-- Notifications Panel -->
 <div id="notif-panel" class="notif-panel hidden">
   <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800 rounded-t-2xl z-10">
     <h3 class="font-black text-lg">🔔 الإشعارات</h3>
@@ -366,18 +377,19 @@
   <div class="glass rounded-2xl p-2 flex gap-2 overflow-x-auto flex-nowrap md:flex-wrap">
     <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">لوحة التنبيهات</button>
     <button onclick="showTab('analytics')" id="tab-analytics" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📊 التحليلات</button>
-    <button onclick="showTab('inventory')" id="tab-inventory" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">المخزون</button>
+    <button onclick="showTab('inventory')" id="tab-inventory" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📦 المخزون</button>
     <button onclick="showTab('search')" id="tab-search" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🔍 بحث متقدم</button>
+    <button onclick="showTab('movements')" id="tab-movements" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📊 الحركات</button>
     <button onclick="showTab('add')" id="tab-add" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">+ إضافة دواء</button>
     <button onclick="showTab('import')" id="tab-import" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📁 استيراد</button>
     <button onclick="showTab('categories')" id="tab-categories" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🏷️ التصنيفات</button>
+    <button onclick="showTab('groups')" id="tab-groups" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">📁 المجموعات</button>
     <button onclick="showTab('branches')" id="tab-branches" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🏪 الفروع</button>
     <button onclick="showTab('report')" id="tab-report" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">🖨️ التقرير</button>
     <button onclick="showTab('settings')" id="tab-settings" class="px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">⚙️ الإعدادات</button>
   </div>
 </nav>
 
-<!-- Dashboard -->
 <section id="view-dashboard" class="max-w-7xl mx-auto p-4 no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <h2 class="text-xl font-black mb-5">🚨 تنبيهات الصلاحية</h2>
@@ -385,101 +397,6 @@
   </div>
 </section>
 
-<!-- Search Tab -->
-<section id="view-search" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
-  <div class="search-panel">
-    <div class="flex items-center gap-3 mb-4">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-        <span class="text-2xl">🔍</span>
-      </div>
-      <div>
-        <h2 class="text-2xl font-black gradient-text">بحث متقدم</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400">ابحث بدقة، وفلتر بسرعة</p>
-      </div>
-    </div>
-    
-    <div class="mb-4">
-      <label class="block text-sm font-bold mb-2">بحث نصي (اسم الدواء، التشغيلة، المورد):</label>
-      <input id="adv-search-input" oninput="renderAdvancedSearch()" placeholder="🔍 اكتب كلمة البحث..." class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-bold mb-2">الفرع:</label>
-        <select id="adv-search-branch" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
-          <option value="all">كل الفروع</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-bold mb-2">التصنيف:</label>
-        <select id="adv-search-category" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
-          <option value="all">كل التصنيفات</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-bold mb-2">المورد:</label>
-        <select id="adv-search-supplier" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
-          <option value="all">كل الموردين</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <label class="block text-sm font-bold mb-2">الحالة:</label>
-      <div class="flex flex-wrap gap-2">
-        <button onclick="toggleStatusFilter('all')" id="status-filter-all" class="filter-chip active" data-status="all">الكل</button>
-        <button onclick="toggleStatusFilter('expired')" id="status-filter-expired" class="filter-chip" data-status="expired">🚨 منتهي</button>
-        <button onclick="toggleStatusFilter('critical')" id="status-filter-critical" class="filter-chip" data-status="critical">🔴 خطر (≤30)</button>
-        <button onclick="toggleStatusFilter('warning')" id="status-filter-warning" class="filter-chip" data-status="warning">🟠 تحذير (≤60)</button>
-        <button onclick="toggleStatusFilter('watch')" id="status-filter-watch" class="filter-chip" data-status="watch">🟡 مراقبة (≤90)</button>
-        <button onclick="toggleStatusFilter('safe')" id="status-filter-safe" class="filter-chip" data-status="safe">🟢 سليم</button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-bold mb-2">الحد الأدنى للسعر:</label>
-        <input type="number" id="adv-min-price" oninput="renderAdvancedSearch()" placeholder="0" class="w-full border rounded-xl px-4 py-3">
-      </div>
-      <div>
-        <label class="block text-sm font-bold mb-2">الحد الأقصى للسعر:</label>
-        <input type="number" id="adv-max-price" oninput="renderAdvancedSearch()" placeholder="10000" class="w-full border rounded-xl px-4 py-3">
-      </div>
-    </div>
-
-    <div class="flex gap-2">
-      <button onclick="resetAdvancedSearch()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-6 py-3 rounded-xl font-bold">
-        🔄 إعادة تعيين
-      </button>
-    </div>
-  </div>
-
-  <div class="glass rounded-2xl p-6">
-    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-      <h3 class="text-lg font-black">النتائج (<span id="adv-results-count">0</span>)</h3>
-      <div class="text-sm text-slate-500" id="adv-results-summary">—</div>
-    </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-      <table class="w-full text-sm">
-        <thead>
-          <tr>
-            <th class="p-3 text-right">الدواء</th>
-            <th class="p-3 text-right">التصنيف</th>
-            <th class="p-3 text-right">الفرع</th>
-            <th class="p-3 text-right">المورد</th>
-            <th class="p-3 text-right">الانتهاء</th>
-            <th class="p-3 text-center">الكمية</th>
-            <th class="p-3 text-center">القيمة</th>
-            <th class="p-3 text-center">الحالة</th>
-          </tr>
-        </thead>
-        <tbody id="adv-results-body"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- Analytics -->
 <section id="view-analytics" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 mb-4">
     <div class="flex items-center justify-between flex-wrap gap-3">
@@ -496,12 +413,8 @@
         <div class="text-xs text-slate-500 dark:text-slate-400">
           آخر تحديث: <span id="analytics-updated">—</span>
         </div>
-        <button onclick="exportAnalyticsToExcel()" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
-          📥 Excel
-        </button>
-        <button onclick="generateAdvancedPDF('analytics')" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
-          📄 PDF
-        </button>
+        <button onclick="exportAnalyticsToExcel()" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">📥 Excel</button>
+        <button onclick="generateAdvancedPDF('analytics')" class="btn-gradient text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">📄 PDF</button>
       </div>
     </div>
   </div>
@@ -525,11 +438,11 @@
       <div id="kpi-risk" class="text-2xl md:text-3xl font-black text-red-500">0</div>
       <div id="kpi-risk-sub" class="text-xs text-slate-400 mt-1">—</div>
     </div>
-    <div class="glass kpi-card border-r-4 border-purple-500">
-      <div class="kpi-icon bg-purple-50 dark:bg-purple-900/30">🎯</div>
-      <div class="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">نسبة الإنقاذ</div>
-      <div id="kpi-rescue" class="text-2xl md:text-3xl font-black text-purple-500">0%</div>
-      <div id="kpi-rescue-sub" class="text-xs text-slate-400 mt-1">—</div>
+    <div class="glass kpi-card border-r-4 border-green-500">
+      <div class="kpi-icon bg-green-50 dark:bg-green-900/30">💵</div>
+      <div class="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">الأرباح المتوقعة</div>
+      <div id="kpi-profit" class="text-2xl md:text-3xl font-black text-green-500">0</div>
+      <div id="kpi-profit-sub" class="text-xs text-slate-400 mt-1">—</div>
     </div>
   </div>
 
@@ -539,9 +452,7 @@
       <div class="health-gauge">
         <svg width="160" height="160" viewBox="0 0 160 160">
           <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(148,163,184,0.2)" stroke-width="16"/>
-          <circle id="health-arc" cx="80" cy="80" r="70" fill="none" stroke="#0d9488" stroke-width="16" 
-                  stroke-dasharray="439.8" stroke-dashoffset="439.8" stroke-linecap="round"
-                  style="transition: stroke-dashoffset 1.5s ease-out, stroke 0.5s ease-out;"/>
+          <circle id="health-arc" cx="80" cy="80" r="70" fill="none" stroke="#0d9488" stroke-width="16" stroke-dasharray="439.8" stroke-dashoffset="439.8" stroke-linecap="round" style="transition: stroke-dashoffset 1.5s ease-out, stroke 0.5s ease-out;"/>
         </svg>
         <div class="health-gauge-text">
           <div id="health-score" class="text-4xl font-black">0</div>
@@ -551,28 +462,21 @@
       <div id="health-label" class="text-center mt-4 font-bold text-lg">—</div>
       <div id="health-desc" class="text-center text-xs text-slate-500 dark:text-slate-400 mt-1">—</div>
     </div>
-
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب الحالة</h3>
-      <div class="chart-container">
-        <canvas id="chart-distribution"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="chart-distribution"></canvas></div>
     </div>
   </div>
 
   <div class="glass rounded-2xl p-6 mb-4">
     <h3 class="text-lg font-black mb-4">📈 اتجاه الأدوية المُنقذة (آخر 6 أشهر)</h3>
-    <div class="chart-container">
-      <canvas id="chart-trend"></canvas>
-    </div>
+    <div class="chart-container"><canvas id="chart-trend"></canvas></div>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">🏢 أفضل الموردين</h3>
-      <div class="chart-container">
-        <canvas id="chart-suppliers"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="chart-suppliers"></canvas></div>
     </div>
     <div class="glass rounded-2xl p-6">
       <h3 class="text-lg font-black mb-4">⚠️ أعلى 5 أدوية معرّضة للخطر</h3>
@@ -582,9 +486,17 @@
 
   <div class="glass rounded-2xl p-6 mb-4">
     <h3 class="text-lg font-black mb-4">🏷️ توزيع الأدوية حسب التصنيف</h3>
-    <div class="chart-container">
-      <canvas id="chart-categories"></canvas>
-    </div>
+    <div class="chart-container"><canvas id="chart-categories"></canvas></div>
+  </div>
+
+  <div class="glass rounded-2xl p-6 mb-4">
+    <h3 class="text-lg font-black mb-4">📁 توزيع الأدوية حسب المجموعة</h3>
+    <div class="chart-container"><canvas id="chart-groups"></canvas></div>
+  </div>
+
+  <div id="low-stock-analytics" class="glass rounded-2xl p-6 mb-4 hidden">
+    <h3 class="text-lg font-black mb-4 text-red-500">🚨 أدوية تحت الحد الأدنى</h3>
+    <div id="low-stock-list"></div>
   </div>
 
   <div id="branch-analytics-container" class="glass rounded-2xl p-6 mb-4 hidden">
@@ -606,44 +518,6 @@
   </div>
 </section>
 
-<!-- Categories -->
-<section id="view-categories" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
-  <div class="category-manager">
-    <div class="flex items-center gap-3 mb-5">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
-        <span class="text-2xl">🏷️</span>
-      </div>
-      <div>
-        <h2 class="text-2xl font-black gradient-text">إدارة التصنيفات</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400">نظّم أدويتك حسب النوع</p>
-      </div>
-    </div>
-
-    <form onsubmit="addCategory(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-      <div class="md:col-span-2">
-        <label class="block text-sm font-bold mb-2">اسم التصنيف *</label>
-        <input required id="cat-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="مثال: مضاد حيوي">
-      </div>
-      <div>
-        <label class="block text-sm font-bold mb-2">اللون</label>
-        <input type="color" id="cat-color" value="#0d9488" class="w-full border rounded-xl px-4 py-3 h-12">
-      </div>
-      <div class="md:col-span-3">
-        <button type="submit" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold w-full">➕ إضافة تصنيف</button>
-      </div>
-    </form>
-
-    <h3 class="text-lg font-black mb-4">التصنيفات الحالية (<span id="categories-count">0</span>)</h3>
-    <div id="categories-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
-  </div>
-
-  <div class="glass rounded-2xl p-6">
-    <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب التصنيف</h3>
-    <div id="categories-stats"></div>
-  </div>
-</section>
-
-<!-- Inventory -->
 <section id="view-inventory" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6">
     <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
@@ -655,12 +529,15 @@
         <thead>
           <tr>
             <th class="p-3 text-right">الدواء</th>
+            <th class="p-3 text-right">SKU</th>
             <th class="p-3 text-right">التصنيف</th>
+            <th class="p-3 text-right">المجموعة</th>
             <th class="p-3 text-right">الفرع</th>
-            <th class="p-3 text-right">التشغيلة</th>
+            <th class="p-3 text-center">الوحدة</th>
+            <th class="p-3 text-center">الكمية</th>
+            <th class="p-3 text-center">المتاحة</th>
+            <th class="p-3 text-center">الحد الأدنى</th>
             <th class="p-3 text-right">الانتهاء</th>
-            <th class="p-3 text-left">الكمية</th>
-            <th class="p-3 text-left">التكلفة</th>
             <th class="p-3 text-center">الأيام</th>
             <th class="p-3 text-center">الحالة</th>
             <th class="p-3 text-center">إجراء</th>
@@ -672,9 +549,155 @@
   </div>
 </section>
 
-<!-- Add -->
+<section id="view-search" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="search-panel">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">🔍</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">بحث متقدم</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">ابحث بدقة، وفلتر بسرعة</p>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-bold mb-2">بحث نصي (اسم، SKU، Barcode، تشغيلة، مورد):</label>
+      <input id="adv-search-input" oninput="renderAdvancedSearch()" placeholder="🔍 اكتب كلمة البحث..." class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">الفرع:</label>
+        <select id="adv-search-branch" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل الفروع</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">التصنيف:</label>
+        <select id="adv-search-category" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل التصنيفات</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">المجموعة:</label>
+        <select id="adv-search-group" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل المجموعات</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">المورد:</label>
+        <select id="adv-search-supplier" onchange="renderAdvancedSearch()" class="w-full border rounded-xl px-4 py-3">
+          <option value="all">كل الموردين</option>
+        </select>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-bold mb-2">الحالة:</label>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="toggleStatusFilter('all')" id="status-filter-all" class="filter-chip active" data-status="all">الكل</button>
+        <button onclick="toggleStatusFilter('expired')" id="status-filter-expired" class="filter-chip" data-status="expired">🚨 منتهي</button>
+        <button onclick="toggleStatusFilter('critical')" id="status-filter-critical" class="filter-chip" data-status="critical">🔴 خطر (≤30)</button>
+        <button onclick="toggleStatusFilter('warning')" id="status-filter-warning" class="filter-chip" data-status="warning">🟠 تحذير (≤60)</button>
+        <button onclick="toggleStatusFilter('watch')" id="status-filter-watch" class="filter-chip" data-status="watch">🟡 مراقبة (≤90)</button>
+        <button onclick="toggleStatusFilter('safe')" id="status-filter-safe" class="filter-chip" data-status="safe">🟢 سليم</button>
+        <button onclick="toggleStatusFilter('low-stock')" id="status-filter-low-stock" class="filter-chip" data-status="low-stock">⚠️ تحت الحد الأدنى</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">الحد الأدنى للسعر:</label>
+        <input type="number" id="adv-min-price" oninput="renderAdvancedSearch()" placeholder="0" class="w-full border rounded-xl px-4 py-3">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">الحد الأقصى للسعر:</label>
+        <input type="number" id="adv-max-price" oninput="renderAdvancedSearch()" placeholder="10000" class="w-full border rounded-xl px-4 py-3">
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="resetAdvancedSearch()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-6 py-3 rounded-xl font-bold">🔄 إعادة تعيين</button>
+    </div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+      <h3 class="text-lg font-black">النتائج (<span id="adv-results-count">0</span>)</h3>
+      <div class="text-sm text-slate-500" id="adv-results-summary">—</div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th class="p-3 text-right">الدواء</th>
+            <th class="p-3 text-right">SKU</th>
+            <th class="p-3 text-right">التصنيف</th>
+            <th class="p-3 text-right">المجموعة</th>
+            <th class="p-3 text-right">الفرع</th>
+            <th class="p-3 text-right">المورد</th>
+            <th class="p-3 text-right">الانتهاء</th>
+            <th class="p-3 text-center">الكمية</th>
+            <th class="p-3 text-center">القيمة</th>
+            <th class="p-3 text-center">الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="adv-results-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="view-movements" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="glass rounded-2xl p-6 mb-4">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">📊</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">حركات المخزون</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">سجل كل حركة دخول وخروج</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-500 font-bold mb-1">إجمالي الحركات</div>
+        <div id="mov-total" class="text-2xl font-black text-teal-500">0</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-500 font-bold mb-1">دخول</div>
+        <div id="mov-in" class="text-2xl font-black text-green-500">0</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-500 font-bold mb-1">خروج</div>
+        <div id="mov-out" class="text-2xl font-black text-red-500">0</div>
+      </div>
+      <div class="glass rounded-xl p-4">
+        <div class="text-xs text-slate-500 font-bold mb-1">تعديلات</div>
+        <div id="mov-adjust" class="text-2xl font-black text-orange-500">0</div>
+      </div>
+    </div>
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <button onclick="openMovementModal()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">➕ إضافة حركة</button>
+      <button onclick="loadMovements()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">🔄 تحديث</button>
+    </div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th class="p-3 text-right">التاريخ</th>
+            <th class="p-3 text-right">النوع</th>
+            <th class="p-3 text-right">الدواء</th>
+            <th class="p-3 text-center">الكمية</th>
+            <th class="p-3 text-right">السبب</th>
+            <th class="p-3 text-right">المرجع</th>
+          </tr>
+        </thead>
+        <tbody id="movements-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <section id="view-add" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
-  <div class="glass rounded-2xl p-6 max-w-2xl mx-auto">
+  <div class="glass rounded-2xl p-6 max-w-3xl mx-auto">
     <h2 class="text-xl font-black mb-5">➕ إضافة دفعة دواء</h2>
     <form onsubmit="addMedicine(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="md:col-span-2">
@@ -686,9 +709,38 @@
         <input required id="f-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="أوجمنتين 1 جم">
       </div>
       <div>
+        <label class="block text-sm font-bold mb-2">SKU (كود المنتج)</label>
+        <input id="f-sku" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="AUG-001">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">Barcode</label>
+        <div class="flex gap-2">
+          <input id="f-barcode" class="flex-1 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="123456789">
+          <button type="button" onclick="openBarcodeScanner()" class="btn-gradient text-white px-4 py-3 rounded-xl font-bold" title="مسح الباركود">📷</button>
+        </div>
+      </div>
+      <div>
         <label class="block text-sm font-bold mb-2">التصنيف</label>
         <select id="f-category" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
           <option value="غير مصنّف">غير مصنّف</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">المجموعة</label>
+        <select id="f-group" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+          <option value="غير محددة">غير محددة</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">وحدة القياس *</label>
+        <select required id="f-unit" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+          <option value="قطعة">قطعة</option>
+          <option value="علبة">علبة</option>
+          <option value="كرتونة">كرتونة</option>
+          <option value="شريط">شريط</option>
+          <option value="أنبوبة">أنبوبة</option>
+          <option value="زجاجة">زجاجة</option>
+          <option value="كيس">كيس</option>
         </select>
       </div>
       <div>
@@ -704,8 +756,16 @@
         <input required type="number" min="1" id="f-qty" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
       </div>
       <div>
-        <label class="block text-sm font-bold mb-2">سعر التكلفة (ج.م) *</label>
+        <label class="block text-sm font-bold mb-2">الحد الأدنى للمخزون</label>
+        <input type="number" min="0" id="f-min-stock" value="0" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">سعر الشراء (ج.م) *</label>
         <input required type="number" step="0.01" min="0" id="f-cost" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">سعر البيع (ج.م)</label>
+        <input type="number" step="0.01" min="0" id="f-sell-price" value="0" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none">
       </div>
       <div class="md:col-span-2">
         <label class="block text-sm font-bold mb-2">المورد</label>
@@ -718,7 +778,136 @@
   </div>
 </section>
 
-<!-- Branches -->
+<section id="view-import" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="glass rounded-2xl p-6">
+    <div id="import-step-1">
+      <h2 class="text-xl font-black mb-5">📁 استيراد ملف المخزون</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-5">ارفع ملف Excel أو CSV. سيكتشف النظام الأعمدة تلقائيًا.</p>
+      <div class="mb-4">
+        <label class="block text-sm font-bold mb-2">الفرع الذي ستُستورد إليه البيانات *</label>
+        <select required id="import-branch" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none"></select>
+      </div>
+      <div id="drop-zone" class="drop-zone border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer">
+        <div class="text-6xl mb-4">📄</div>
+        <div class="text-lg font-bold">اسحب الملف هنا أو اضغط للاختيار</div>
+        <div class="text-sm text-slate-500 mt-2">يدعم: .xlsx, .xls, .csv</div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" class="hidden">
+      </div>
+    </div>
+    <div id="import-step-2" class="hidden">
+      <div class="flex justify-between items-center mb-5 flex-wrap gap-2">
+        <h2 class="text-xl font-black">🎯 مطابقة الأعمدة</h2>
+        <div class="text-sm text-slate-600 dark:text-slate-400">الملف: <b id="file-name-display"></b> — <span id="file-rows-count"></span> صف</div>
+      </div>
+      <div id="mapping-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div class="flex gap-2 mt-6">
+        <button onclick="processImport()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold flex-1">➡️ معاينة البيانات</button>
+        <button onclick="resetImport()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+      </div>
+    </div>
+    <div id="import-step-3" class="hidden">
+      <h2 class="text-xl font-black mb-5">👀 معاينة البيانات</h2>
+      <div id="import-summary" class="p-4 rounded-xl mb-4 text-sm bg-slate-50 dark:bg-slate-800/50"></div>
+      <div class="overflow-x-auto mb-5 rounded-xl border border-slate-200 dark:border-slate-700">
+        <table class="w-full text-xs">
+          <thead><tr>
+            <th class="p-2 text-center">#</th>
+            <th class="p-2 text-right">الدواء</th>
+            <th class="p-2 text-right">SKU</th>
+            <th class="p-2 text-right">التشغيلة</th>
+            <th class="p-2 text-right">الانتهاء</th>
+            <th class="p-2 text-center">الكمية</th>
+            <th class="p-2 text-center">التكلفة</th>
+            <th class="p-2 text-right">المورد</th>
+            <th class="p-2 text-center">الحالة</th>
+          </tr></thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+      </div>
+      <div id="import-errors" class="hidden bg-red-50 dark:bg-red-900/20 border-r-4 border-red-500 p-4 rounded-xl text-sm mb-5"></div>
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="confirmImport()" id="confirm-btn" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold flex-1">✅ تأكيد الاستيراد</button>
+        <button onclick="backToMapping()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">⬅ رجوع</button>
+      </div>
+    </div>
+    <div id="import-step-4" class="hidden text-center py-12">
+      <div class="text-7xl mb-6 animate-float">🎉</div>
+      <h2 class="text-2xl font-black mb-3">تم الاستيراد بنجاح!</h2>
+      <p id="import-done-msg" class="text-slate-600 dark:text-slate-400 mb-6"></p>
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button onclick="showTab('dashboard')" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">عرض التنبيهات</button>
+        <button onclick="resetImport()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">استيراد آخر</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="view-categories" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="category-manager">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">🏷️</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">إدارة التصنيفات</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">نظّم أدويتك حسب النوع</p>
+      </div>
+    </div>
+    <form onsubmit="addCategory(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-bold mb-2">اسم التصنيف *</label>
+        <input required id="cat-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="مثال: مضاد حيوي">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">اللون</label>
+        <input type="color" id="cat-color" value="#0d9488" class="w-full border rounded-xl px-4 py-3 h-12">
+      </div>
+      <div class="md:col-span-3">
+        <button type="submit" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold w-full">➕ إضافة تصنيف</button>
+      </div>
+    </form>
+    <h3 class="text-lg font-black mb-4">التصنيفات الحالية (<span id="categories-count">0</span>)</h3>
+    <div id="categories-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب التصنيف</h3>
+    <div id="categories-stats"></div>
+  </div>
+</section>
+
+<section id="view-groups" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
+  <div class="category-manager">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
+        <span class="text-2xl">📁</span>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black gradient-text">إدارة المجموعات</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">نظّم أدويتك حسب الاستخدام</p>
+      </div>
+    </div>
+    <form onsubmit="addGroup(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-bold mb-2">اسم المجموعة *</label>
+        <input required id="group-name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="مثال: أدوية أطفال">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">اللون</label>
+        <input type="color" id="group-color" value="#3b82f6" class="w-full border rounded-xl px-4 py-3 h-12">
+      </div>
+      <div class="md:col-span-3">
+        <button type="submit" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold w-full">➕ إضافة مجموعة</button>
+      </div>
+    </form>
+    <h3 class="text-lg font-black mb-4">المجموعات الحالية (<span id="groups-count">0</span>)</h3>
+    <div id="groups-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <h3 class="text-lg font-black mb-4">📊 توزيع الأدوية حسب المجموعة</h3>
+    <div id="groups-stats"></div>
+  </div>
+</section>
+
 <section id="view-branches" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 mb-4">
     <h2 class="text-xl font-black mb-5">🏪 إدارة الفروع</h2>
@@ -741,81 +930,12 @@
       </div>
     </form>
   </div>
-
   <div class="glass rounded-2xl p-6">
     <h3 class="text-lg font-black mb-4">الفروع الحالية (<span id="branches-count">0</span>)</h3>
     <div id="branches-list" class="space-y-3"></div>
   </div>
 </section>
 
-<!-- Import -->
-<section id="view-import" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
-  <div class="glass rounded-2xl p-6">
-    <div id="import-step-1">
-      <h2 class="text-xl font-black mb-5">📁 استيراد ملف المخزون</h2>
-      <p class="text-sm text-slate-600 dark:text-slate-400 mb-5">ارفع ملف Excel أو CSV. سيكتشف النظام الأعمدة تلقائيًا.</p>
-      <div class="mb-4">
-        <label class="block text-sm font-bold mb-2">الفرع الذي ستُستورد إليه البيانات *</label>
-        <select required id="import-branch" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none"></select>
-      </div>
-      <div id="drop-zone" class="drop-zone border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer">
-        <div class="text-6xl mb-4">📄</div>
-        <div class="text-lg font-bold">اسحب الملف هنا أو اضغط للاختيار</div>
-        <div class="text-sm text-slate-500 mt-2">يدعم: .xlsx, .xls, .csv</div>
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" class="hidden">
-      </div>
-    </div>
-
-    <div id="import-step-2" class="hidden">
-      <div class="flex justify-between items-center mb-5 flex-wrap gap-2">
-        <h2 class="text-xl font-black">🎯 مطابقة الأعمدة</h2>
-        <div class="text-sm text-slate-600 dark:text-slate-400">الملف: <b id="file-name-display"></b> — <span id="file-rows-count"></span> صف</div>
-      </div>
-      <div id="mapping-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      <div class="flex gap-2 mt-6">
-        <button onclick="processImport()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold flex-1">➡️ معاينة البيانات</button>
-        <button onclick="resetImport()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">إلغاء</button>
-      </div>
-    </div>
-
-    <div id="import-step-3" class="hidden">
-      <h2 class="text-xl font-black mb-5">👀 معاينة البيانات</h2>
-      <div id="import-summary" class="p-4 rounded-xl mb-4 text-sm bg-slate-50 dark:bg-slate-800/50"></div>
-      <div class="overflow-x-auto mb-5 rounded-xl border border-slate-200 dark:border-slate-700">
-        <table class="w-full text-xs">
-          <thead><tr>
-            <th class="p-2 text-center">#</th>
-            <th class="p-2 text-right">الدواء</th>
-            <th class="p-2 text-right">التشغيلة</th>
-            <th class="p-2 text-right">الانتهاء</th>
-            <th class="p-2 text-center">الكمية</th>
-            <th class="p-2 text-center">التكلفة</th>
-            <th class="p-2 text-right">المورد</th>
-            <th class="p-2 text-center">الحالة</th>
-          </tr></thead>
-          <tbody id="preview-body"></tbody>
-        </table>
-      </div>
-      <div id="import-errors" class="hidden bg-red-50 dark:bg-red-900/20 border-r-4 border-red-500 p-4 rounded-xl text-sm mb-5"></div>
-      <div class="flex gap-2 flex-wrap">
-        <button onclick="confirmImport()" id="confirm-btn" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold flex-1">✅ تأكيد الاستيراد</button>
-        <button onclick="backToMapping()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">⬅ رجوع</button>
-      </div>
-    </div>
-
-    <div id="import-step-4" class="hidden text-center py-12">
-      <div class="text-7xl mb-6 animate-float">🎉</div>
-      <h2 class="text-2xl font-black mb-3">تم الاستيراد بنجاح!</h2>
-      <p id="import-done-msg" class="text-slate-600 dark:text-slate-400 mb-6"></p>
-      <div class="flex gap-2 justify-center flex-wrap">
-        <button onclick="showTab('dashboard')" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">عرض التنبيهات</button>
-        <button onclick="resetImport()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">استيراد آخر</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Report -->
 <section id="view-report" class="max-w-7xl mx-auto p-4 hidden animate-fade-in">
   <div class="glass rounded-2xl p-6 no-print mb-4">
     <h2 class="text-xl font-black mb-5">🖨️ إعدادات التقرير</h2>
@@ -845,12 +965,12 @@
     <div class="flex gap-2 mt-4 flex-wrap">
       <button onclick="doPrint()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">🖨️ اطبع الآن</button>
       <button onclick="generateAdvancedPDF('supplier-report')" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">📄 تحميل PDF</button>
+      <button onclick="exportLowStock()" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold">⚠️ تصدير تحت الحد الأدنى</button>
     </div>
   </div>
   <div id="report-preview" class="rounded-2xl"></div>
 </section>
 
-<!-- Settings -->
 <section id="view-settings" class="max-w-7xl mx-auto p-4 hidden no-print animate-fade-in">
   <div class="glass rounded-2xl p-6 max-w-3xl mx-auto">
     <h2 class="text-xl font-black mb-5">⚙️ إعدادات الصيدلية</h2>
@@ -898,7 +1018,6 @@
 
 </div>
 
-<!-- Lock Screen -->
 <div id="lock-screen" class="lock-screen hidden">
   <div class="lock-card">
     <div class="text-6xl mb-4" id="lock-icon">🔒</div>
@@ -920,6 +1039,59 @@
   </div>
 </div>
 
+<div id="barcode-modal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-black gradient-text">📷 مسح الباركود</h2>
+      <button onclick="closeBarcodeScanner()" class="text-slate-400 hover:text-slate-200 text-2xl">✕</button>
+    </div>
+    <div id="barcode-reader"></div>
+    <p class="text-sm text-slate-500 dark:text-slate-400 text-center mt-4">وجّه الكاميرا نحو الباركود</p>
+  </div>
+</div>
+
+<div id="movement-modal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-black gradient-text">➕ إضافة حركة مخزون</h2>
+      <button onclick="closeMovementModal()" class="text-slate-400 hover:text-slate-200 text-2xl">✕</button>
+    </div>
+    <form onsubmit="submitMovement(event)" class="space-y-4">
+      <div>
+        <label class="block text-sm font-bold mb-2">الدواء *</label>
+        <select required id="mov-batch" class="w-full border rounded-xl px-4 py-3"></select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">نوع الحركة *</label>
+        <select required id="mov-type" class="w-full border rounded-xl px-4 py-3">
+          <option value="in">📥 دخول (شراء)</option>
+          <option value="out">📤 خروج (بيع)</option>
+          <option value="adjust">⚙️ تعديل (جرد)</option>
+          <option value="return">↩️ إرجاع</option>
+          <option value="damage">💔 تلف</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">الكمية *</label>
+        <input required type="number" min="1" id="mov-qty" class="w-full border rounded-xl px-4 py-3">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">السبب</label>
+        <input id="mov-reason" class="w-full border rounded-xl px-4 py-3" placeholder="مثال: بيع، شراء من المورد، جرد">
+      </div>
+      <div>
+        <label class="block text-sm font-bold mb-2">المرجع</label>
+        <input id="mov-ref" class="w-full border rounded-xl px-4 py-3" placeholder="رقم الفاتورة أو ملاحظة">
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="btn-gradient text-white px-6 py-3 rounded-xl font-bold flex-1">حفظ الحركة</button>
+        <button type="button" onclick="closeMovementModal()" class="bg-slate-200 dark:bg-slate-700 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 <script>
 // ============================================================
 // Supabase
@@ -933,7 +1105,8 @@ let currentPharmacy = null;
 let batchesCache = [];
 let branchesCache = [];
 let categoriesCache = [];
-let membersCache = [];
+let groupsCache = [];
+let movementsCache = [];
 let currentBranchFilter = 'all';
 let isAccountLocked = false;
 let isFrozen = false;
@@ -942,13 +1115,12 @@ let chartDistribution = null;
 let chartTrend = null;
 let chartSuppliers = null;
 let chartCategories = null;
+let chartGroups = null;
 let notifications = [];
 let notifPanelOpen = false;
 let currentStatusFilter = 'all';
+let barcodeScanner = null;
 
-// ============================================================
-// Helpers
-// ============================================================
 function daysUntilExpiry(d) {
   if (!d) return 9999;
   const t = new Date(); t.setHours(0,0,0,0);
@@ -967,7 +1139,7 @@ function esc(s) {
 function fmtNum(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
 function fmtMoney(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
 function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('hidden'); }
-function hideError(id) { document.getElementById(id).classList.add('hidden'); }
+function hideError(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
 function getBranchName(branchId) {
   if (!branchId) return 'غير محدد';
   const b = branchesCache.find(x => x.id === branchId);
@@ -977,14 +1149,21 @@ function getCategoryColor(cat) {
   const c = categoriesCache.find(x => x.name === cat);
   return c ? c.color : '#64748b';
 }
+function getGroupColor(group) {
+  const g = groupsCache.find(x => x.name === group);
+  return g ? g.color : '#3b82f6';
+}
+function getAvailableQty(batch) {
+  return Math.max(0, (batch.qty || 0) - (batch.reserved_qty || 0));
+}
+function isLowStock(batch) {
+  return (batch.min_stock || 0) > 0 && batch.qty <= batch.min_stock;
+}
 function getFilteredBatches() {
   if (currentBranchFilter === 'all') return batchesCache;
   return batchesCache.filter(b => b.branch_id === currentBranchFilter);
 }
 
-// ============================================================
-// Toast
-// ============================================================
 function showToast(message, type = 'info') {
   const colors = {
     success: 'background: linear-gradient(135deg, #16a34a, #22c55e)',
@@ -1005,64 +1184,25 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
-// ============================================================
-// Push Notifications
-// ============================================================
 async function enablePushNotifications() {
-  if (!('Notification' in window)) {
-    showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
-    return;
-  }
-
-  if (Notification.permission === 'granted') {
-    showToast('✅ الإشعارات مفعّلة بالفعل', 'success');
-    scheduleNotifications();
-    return;
-  }
-
+  if (!('Notification' in window)) { showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning'); return; }
+  if (Notification.permission === 'granted') { showToast('✅ الإشعارات مفعّلة', 'success'); scheduleNotifications(); return; }
   const permission = await Notification.requestPermission();
   if (permission === 'granted') {
     showToast('✅ تم تفعيل الإشعارات!', 'success');
-    new Notification('صلاحية', {
-      body: 'مرحبًا! ستصلك إشعارات بالأدوية التي ستنتهي قريبًا.',
-      icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
-    });
     scheduleNotifications();
-  } else {
-    showToast('⚠️ تم رفض الإشعارات', 'warning');
-  }
+  } else { showToast('⚠️ تم رفض الإشعارات', 'warning'); }
 }
 
 function scheduleNotifications() {
   if (Notification.permission !== 'granted') return;
-  
-  // إشعارات فورية حسب الحالة
   const activeBatches = batchesCache.filter(b => b.qty > 0);
   const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0);
   const critical = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 7; });
-  
-  if (expired.length > 0) {
-    setTimeout(() => {
-      new Notification('🚨 أدوية منتهية الصلاحية!', {
-        body: `${expired.length} دواء منتهي. افتح التطبيق للمراجعة.`,
-        icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
-      });
-    }, 2000);
-  }
-
-  if (critical.length > 0) {
-    setTimeout(() => {
-      new Notification('⚠️ أدوية تنتهي قريبًا', {
-        body: `${critical.length} دواء سينتهي خلال 7 أيام.`,
-        icon: 'https://sudanesesdg-collab.github.io/Salahiya/icon.png'
-      });
-    }, 5000);
-  }
+  if (expired.length > 0) setTimeout(() => { new Notification('🚨 أدوية منتهية!', { body: `${expired.length} دواء منتهي.` }); }, 2000);
+  if (critical.length > 0) setTimeout(() => { new Notification('⚠️ أدوية تنتهي قريبًا', { body: `${critical.length} دواء.` }); }, 5000);
 }
 
-// ============================================================
-// Dark Mode
-// ============================================================
 function toggleDark() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -1070,54 +1210,26 @@ function toggleDark() {
   document.getElementById('dark-icon').innerHTML = isDark
     ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
     : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-  if (document.getElementById('view-analytics').classList.contains('hidden') === false) {
-    setTimeout(() => renderAnalytics(), 100);
-  }
+  if (!document.getElementById('view-analytics').classList.contains('hidden')) setTimeout(() => renderAnalytics(), 100);
 }
 
 if (localStorage.getItem('darkMode') === '1') { document.body.classList.add('dark'); }
 
-// ============================================================
-// Notifications (In-App)
-// ============================================================
 function initNotifications() {
   notifications = [];
   const activeBatches = batchesCache.filter(b => b.qty > 0);
-  
   const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0);
-  expired.slice(0, 3).forEach(b => {
-    notifications.push({
-      id: 'exp-' + b.id, type: 'expired', icon: '🚨',
-      title: 'دواء منتهي',
-      message: `${b.name} — منتهي منذ ${Math.abs(daysUntilExpiry(b.expiry))} يوم`,
-      time: new Date().toISOString(), read: false
-    });
-  });
-
+  expired.slice(0, 3).forEach(b => notifications.push({ id: 'exp-' + b.id, icon: '🚨', title: 'دواء منتهي', message: `${b.name} — منتهي منذ ${Math.abs(daysUntilExpiry(b.expiry))} يوم`, time: new Date().toISOString(), read: false }));
   const critical = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; });
-  critical.slice(0, 3).forEach(b => {
-    notifications.push({
-      id: 'crit-' + b.id, type: 'critical', icon: '⚠️',
-      title: 'دواء سينتهي قريبًا',
-      message: `${b.name} — متبقي ${daysUntilExpiry(b.expiry)} يوم`,
-      time: new Date().toISOString(), read: false
-    });
-  });
-
+  critical.slice(0, 3).forEach(b => notifications.push({ id: 'crit-' + b.id, icon: '⚠️', title: 'دواء سينتهي قريبًا', message: `${b.name} — متبقي ${daysUntilExpiry(b.expiry)} يوم`, time: new Date().toISOString(), read: false }));
+  const lowStock = activeBatches.filter(b => isLowStock(b));
+  lowStock.slice(0, 3).forEach(b => notifications.push({ id: 'low-' + b.id, icon: '📉', title: 'مخزون منخفض', message: `${b.name} — الكمية ${b.qty} (الحد: ${b.min_stock})`, time: new Date().toISOString(), read: false }));
   if (activeBatches.length > 0) {
     const total = activeBatches.length;
     const safe = activeBatches.filter(b => daysUntilExpiry(b.expiry) > 90).length;
     const health = Math.round((safe / total) * 100);
-    if (health < 50) {
-      notifications.push({
-        id: 'health-' + Date.now(), type: 'health', icon: '💊',
-        title: 'صحة مخزونك منخفضة',
-        message: `صحة المخزون: ${health}% — يحتاج تحسين`,
-        time: new Date().toISOString(), read: false
-      });
-    }
+    if (health < 50) notifications.push({ id: 'health-' + Date.now(), icon: '💊', title: 'صحة مخزونك منخفضة', message: `صحة المخزون: ${health}%`, time: new Date().toISOString(), read: false });
   }
-
   notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
   renderNotifications();
 }
@@ -1125,57 +1237,19 @@ function initNotifications() {
 function renderNotifications() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const badge = document.getElementById('notif-badge');
-  if (unreadCount > 0) {
-    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
-  }
-
+  if (unreadCount > 0) { badge.textContent = unreadCount > 99 ? '99+' : unreadCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
   const list = document.getElementById('notif-list');
-  if (!notifications.length) {
-    list.innerHTML = '<div class="p-8 text-center text-slate-500"><div class="text-5xl mb-3">✨</div><p class="font-bold">لا توجد إشعارات</p></div>';
-    return;
-  }
-
-  list.innerHTML = notifications.map(n => `
-    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotifRead('${n.id}')">
-      <div class="flex gap-3">
-        <div class="text-2xl flex-shrink-0">${n.icon}</div>
-        <div class="flex-1 min-w-0">
-          <div class="font-bold text-sm">${esc(n.title)}</div>
-          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words">${esc(n.message)}</div>
-          <div class="text-xs text-slate-400 mt-1">${new Date(n.time).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  if (!notifications.length) { list.innerHTML = '<div class="p-8 text-center text-slate-500"><div class="text-5xl mb-3">✨</div><p class="font-bold">لا توجد إشعارات</p></div>'; return; }
+  list.innerHTML = notifications.map(n => `<div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotifRead('${n.id}')"><div class="flex gap-3"><div class="text-2xl flex-shrink-0">${n.icon}</div><div class="flex-1 min-w-0"><div class="font-bold text-sm">${esc(n.title)}</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words">${esc(n.message)}</div></div></div></div>`).join('');
 }
 
-function markNotifRead(id) {
-  const n = notifications.find(x => x.id === id);
-  if (n) { n.read = true; renderNotifications(); }
-}
+function markNotifRead(id) { const n = notifications.find(x => x.id === id); if (n) { n.read = true; renderNotifications(); } }
+function markAllRead() { notifications.forEach(n => n.read = true); renderNotifications(); showToast('✅ تم تعليم الكل كمقروءة', 'success'); }
+function toggleNotifPanel() { const panel = document.getElementById('notif-panel'); notifPanelOpen = !notifPanelOpen; panel.classList.toggle('hidden', !notifPanelOpen); }
 
-function markAllRead() {
-  notifications.forEach(n => n.read = true);
-  renderNotifications();
-  showToast('✅ تم تعليم كل الإشعارات كمقروءة', 'success');
-}
-
-function toggleNotifPanel() {
-  const panel = document.getElementById('notif-panel');
-  notifPanelOpen = !notifPanelOpen;
-  panel.classList.toggle('hidden', !notifPanelOpen);
-}
-
-// ============================================================
-// Categories
-// ============================================================
 async function loadCategories() {
-  const { data, error } = await supabaseClient.from('medicine_categories').select('*').order('created_at', { ascending: true });
-  if (error) { console.error(error); return; }
-  categoriesCache = data || [];
+  const { data, error } = await supabaseClient.from('medicine_categories').select('*').eq('user_id', currentUser.id).eq('is_group', false).order('created_at', { ascending: true });
+  if (error) { console.error('categories error:', error); categoriesCache = []; } else { categoriesCache = data || []; }
   renderCategoriesUI();
 }
 
@@ -1184,10 +1258,8 @@ async function addCategory(e) {
   const name = document.getElementById('cat-name').value.trim();
   const color = document.getElementById('cat-color').value;
   if (!name) { showToast('⚠️ اسم التصنيف مطلوب', 'warning'); return; }
-  
-  const { error } = await supabaseClient.from('medicine_categories').insert({ name, color });
+  const { error } = await supabaseClient.from('medicine_categories').insert({ name, color, user_id: currentUser.id, is_group: false });
   if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
-  
   e.target.reset();
   document.getElementById('cat-color').value = '#0d9488';
   await loadCategories();
@@ -1195,7 +1267,7 @@ async function addCategory(e) {
 }
 
 async function deleteCategory(id) {
-  if (!confirm('حذف هذا التصنيف؟ (الأدوية لن تُحذف)')) return;
+  if (!confirm('حذف هذا التصنيف؟')) return;
   const { error } = await supabaseClient.from('medicine_categories').delete().eq('id', id);
   if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadCategories();
@@ -1207,187 +1279,132 @@ function renderCategoriesUI() {
   const count = document.getElementById('categories-count');
   if (!list) return;
   count.textContent = categoriesCache.length;
-
-  // تحديث قوائم الاختيار
   const catSelect = document.getElementById('f-category');
-  if (catSelect) {
-    const current = catSelect.value;
-    catSelect.innerHTML = '<option value="غير مصنّف">غير مصنّف</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
-  }
+  if (catSelect) { const current = catSelect.value; catSelect.innerHTML = '<option value="غير مصنّف">غير مصنّف</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join(''); }
   const advCat = document.getElementById('adv-search-category');
-  if (advCat) {
-    const current = advCat.value;
-    advCat.innerHTML = '<option value="all">كل التصنيفات</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
-  }
-
-  if (!categoriesCache.length) {
-    list.innerHTML = '<p class="text-slate-500 col-span-3 text-center py-8">لا توجد تصنيفات. أضف تصنيفًا جديدًا.</p>';
-    return;
-  }
-
-  list.innerHTML = categoriesCache.map(c => {
-    const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length;
-    return `<div class="glass p-4 rounded-xl flex justify-between items-center">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span>
-          <span class="font-bold">${esc(c.name)}</span>
-        </div>
-        <div class="text-xs text-slate-500 mt-1">${countBatches} دواء</div>
-      </div>
-      <button onclick="deleteCategory('${c.id}')" class="text-red-500 text-xs font-bold">حذف</button>
-    </div>`;
-  }).join('');
-
-  // إحصائيات التصنيفات
+  if (advCat) { const current = advCat.value; advCat.innerHTML = '<option value="all">كل التصنيفات</option>' + categoriesCache.map(c => `<option value="${esc(c.name)}"${c.name === current ? ' selected' : ''}>${esc(c.name)}</option>`).join(''); }
+  if (!categoriesCache.length) { list.innerHTML = '<p class="text-slate-500 col-span-3 text-center py-8">لا توجد تصنيفات.</p>'; }
+  else { list.innerHTML = categoriesCache.map(c => { const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length; return `<div class="glass p-4 rounded-xl flex justify-between items-center"><div><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span><span class="font-bold">${esc(c.name)}</span></div><div class="text-xs text-slate-500 mt-1">${countBatches} دواء</div></div><button onclick="deleteCategory('${c.id}')" class="text-red-500 text-xs font-bold">حذف</button></div>`; }).join(''); }
   const stats = document.getElementById('categories-stats');
-  if (stats) {
-    if (!categoriesCache.length) {
-      stats.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد تصنيفات بعد.</p>';
-    } else {
-      const totalBatches = batchesCache.filter(b => b.qty > 0).length;
-      stats.innerHTML = categoriesCache.map(c => {
-        const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length;
-        const percentage = totalBatches > 0 ? Math.round((countBatches / totalBatches) * 100) : 0;
-        return `<div class="mb-3">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-sm flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span>
-              ${esc(c.name)}
-            </span>
-            <span class="text-sm text-slate-500">${countBatches} دواء (${percentage}%)</span>
-          </div>
-          <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-            <div class="h-2 rounded-full transition-all" style="width: ${percentage}%; background: ${c.color};"></div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-  }
+  if (stats) { if (!categoriesCache.length) stats.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد تصنيفات.</p>'; else { const totalBatches = batchesCache.filter(b => b.qty > 0).length; stats.innerHTML = categoriesCache.map(c => { const countBatches = batchesCache.filter(b => b.category === c.name && b.qty > 0).length; const percentage = totalBatches > 0 ? Math.round((countBatches / totalBatches) * 100) : 0; return `<div class="mb-3"><div class="flex justify-between items-center mb-1"><span class="font-bold text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background: ${c.color};"></span>${esc(c.name)}</span><span class="text-sm text-slate-500">${countBatches} دواء (${percentage}%)</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="h-2 rounded-full" style="width: ${percentage}%; background: ${c.color};"></div></div></div>`; }).join(''); } }
 }
 
-// ============================================================
-// Advanced Search
-// ============================================================
-function toggleStatusFilter(status) {
-  currentStatusFilter = status;
-  document.querySelectorAll('.filter-chip').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.status === status);
-  });
-  renderAdvancedSearch();
+async function loadGroups() {
+  const { data, error } = await supabaseClient.from('medicine_categories').select('*').eq('user_id', currentUser.id).eq('is_group', true).order('created_at', { ascending: true });
+  if (error) { console.error('groups error:', error); groupsCache = []; } else { groupsCache = data || []; }
+  renderGroupsUI();
 }
 
-function resetAdvancedSearch() {
-  document.getElementById('adv-search-input').value = '';
-  document.getElementById('adv-search-branch').value = 'all';
-  document.getElementById('adv-search-category').value = 'all';
-  document.getElementById('adv-search-supplier').value = 'all';
-  document.getElementById('adv-min-price').value = '';
-  document.getElementById('adv-max-price').value = '';
-  currentStatusFilter = 'all';
-  document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.status === 'all'));
-  renderAdvancedSearch();
+async function addGroup(e) {
+  e.preventDefault();
+  const name = document.getElementById('group-name').value.trim();
+  const color = document.getElementById('group-color').value;
+  if (!name) { showToast('⚠️ اسم المجموعة مطلوب', 'warning'); return; }
+  const { error } = await supabaseClient.from('medicine_categories').insert({ name, color, user_id: currentUser.id, is_group: true });
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
+  e.target.reset();
+  document.getElementById('group-color').value = '#3b82f6';
+  await loadGroups();
+  showToast('✅ تم إضافة المجموعة!', 'success');
 }
 
-function renderAdvancedSearch() {
-  const q = (document.getElementById('adv-search-input')?.value || '').toLowerCase();
-  const branch = document.getElementById('adv-search-branch')?.value || 'all';
-  const category = document.getElementById('adv-search-category')?.value || 'all';
-  const supplier = document.getElementById('adv-search-supplier')?.value || 'all';
-  const minPrice = parseFloat(document.getElementById('adv-min-price')?.value) || 0;
-  const maxPrice = parseFloat(document.getElementById('adv-max-price')?.value) || Infinity;
-
-  // تحديث قوائم الفروع والموردين
-  const brSelect = document.getElementById('adv-search-branch');
-  if (brSelect) {
-    const cur = brSelect.value;
-    brSelect.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${b.id === cur ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
-  }
-  const supSelect = document.getElementById('adv-search-supplier');
-  if (supSelect) {
-    const sups = [...new Set(batchesCache.map(b => b.supplier).filter(Boolean))];
-    const cur = supSelect.value;
-    supSelect.innerHTML = '<option value="all">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
-  }
-
-  let results = batchesCache.filter(b => b.qty > 0);
-
-  if (q) {
-    results = results.filter(b => 
-      b.name.toLowerCase().includes(q) || 
-      (b.batch || '').toLowerCase().includes(q) ||
-      (b.supplier || '').toLowerCase().includes(q) ||
-      (b.category || '').toLowerCase().includes(q)
-    );
-  }
-
-  if (branch !== 'all') results = results.filter(b => b.branch_id === branch);
-  if (category !== 'all') results = results.filter(b => b.category === category);
-  if (supplier !== 'all') results = results.filter(b => b.supplier === supplier);
-  if (minPrice > 0) results = results.filter(b => Number(b.cost) >= minPrice);
-  if (maxPrice < Infinity) results = results.filter(b => Number(b.cost) <= maxPrice);
-
-  if (currentStatusFilter !== 'all') {
-    results = results.filter(b => {
-      const d = daysUntilExpiry(b.expiry);
-      if (currentStatusFilter === 'expired') return d < 0;
-      if (currentStatusFilter === 'critical') return d >= 0 && d <= 30;
-      if (currentStatusFilter === 'warning') return d > 30 && d <= 60;
-      if (currentStatusFilter === 'watch') return d > 60 && d <= 90;
-      if (currentStatusFilter === 'safe') return d > 90;
-      return true;
-    });
-  }
-
-  results.sort((a, b) => daysUntilExpiry(a.expiry) - daysUntilExpiry(b.expiry));
-
-  const tb = document.getElementById('adv-results-body');
-  const countEl = document.getElementById('adv-results-count');
-  const summaryEl = document.getElementById('adv-results-summary');
-  
-  if (!results.length) {
-    tb.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500 p-8">لا توجد نتائج مطابقة.</td></tr>';
-    countEl.textContent = '0';
-    summaryEl.textContent = '';
-    return;
-  }
-
-  const totalValue = results.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-  countEl.textContent = results.length;
-  summaryEl.textContent = `القيمة الإجمالية: ${fmtMoney(totalValue)} ج.م`;
-
-  tb.innerHTML = results.slice(0, 100).map(b => {
-    const d = daysUntilExpiry(b.expiry);
-    const st = getStatus(d);
-    const catColor = getCategoryColor(b.category || 'غير مصنّف');
-    return `<tr class="border-b">
-      <td class="p-3 font-bold">${esc(b.name)}</td>
-      <td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span></td>
-      <td class="p-3 text-xs text-slate-500">${esc(getBranchName(b.branch_id))}</td>
-      <td class="p-3 text-xs text-slate-500">${esc(b.supplier)}</td>
-      <td class="p-3">${b.expiry}</td>
-      <td class="p-3 text-center">${b.qty}</td>
-      <td class="p-3 text-center">${(b.qty * Number(b.cost)).toFixed(0)}</td>
-      <td class="p-3 text-center"><span class="${st.color} text-xs px-2 py-1 rounded-lg font-bold">${st.label}</span></td>
-    </tr>`;
-  }).join('') + (results.length > 100 ? `<tr><td colspan="8" class="text-center text-slate-500 p-3 text-xs">يتم عرض أول 100 نتيجة من ${results.length}</td></tr>` : '');
+async function deleteGroup(id) {
+  if (!confirm('حذف هذه المجموعة؟')) return;
+  const { error } = await supabaseClient.from('medicine_categories').delete().eq('id', id);
+  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
+  await loadGroups();
+  showToast('✅ تم الحذف', 'success');
 }
 
-// ============================================================
-// Auth
-// ============================================================
+function renderGroupsUI() {
+  const list = document.getElementById('groups-list');
+  const count = document.getElementById('groups-count');
+  if (!list) return;
+  count.textContent = groupsCache.length;
+  const groupSelect = document.getElementById('f-group');
+  if (groupSelect) { const current = groupSelect.value; groupSelect.innerHTML = '<option value="غير محددة">غير محددة</option>' + groupsCache.map(g => `<option value="${esc(g.name)}"${g.name === current ? ' selected' : ''}>${esc(g.name)}</option>`).join(''); }
+  const advGroup = document.getElementById('adv-search-group');
+  if (advGroup) { const current = advGroup.value; advGroup.innerHTML = '<option value="all">كل المجموعات</option>' + groupsCache.map(g => `<option value="${esc(g.name)}"${g.name === current ? ' selected' : ''}>${esc(g.name)}</option>`).join(''); }
+  if (!groupsCache.length) { list.innerHTML = '<p class="text-slate-500 col-span-3 text-center py-8">لا توجد مجموعات.</p>'; }
+  else { list.innerHTML = groupsCache.map(g => { const countBatches = batchesCache.filter(b => b.group_name === g.name && b.qty > 0).length; return `<div class="glass p-4 rounded-xl flex justify-between items-center"><div><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background: ${g.color};"></span><span class="font-bold">${esc(g.name)}</span></div><div class="text-xs text-slate-500 mt-1">${countBatches} دواء</div></div><button onclick="deleteGroup('${g.id}')" class="text-red-500 text-xs font-bold">حذف</button></div>`; }).join(''); }
+  const stats = document.getElementById('groups-stats');
+  if (stats) { if (!groupsCache.length) stats.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد مجموعات.</p>'; else { const totalBatches = batchesCache.filter(b => b.qty > 0).length; stats.innerHTML = groupsCache.map(g => { const countBatches = batchesCache.filter(b => b.group_name === g.name && b.qty > 0).length; const percentage = totalBatches > 0 ? Math.round((countBatches / totalBatches) * 100) : 0; return `<div class="mb-3"><div class="flex justify-between items-center mb-1"><span class="font-bold text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background: ${g.color};"></span>${esc(g.name)}</span><span class="text-sm text-slate-500">${countBatches} دواء (${percentage}%)</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="h-2 rounded-full" style="width: ${percentage}%; background: ${g.color};"></div></div></div>`; }).join(''); } }
+}
+
+function openBarcodeScanner() {
+  document.getElementById('barcode-modal').classList.remove('hidden');
+  setTimeout(() => {
+    try {
+      barcodeScanner = new Html5Qrcode("barcode-reader");
+      barcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { document.getElementById('f-barcode').value = decodedText; showToast('✅ تم مسح الباركود', 'success'); closeBarcodeScanner(); },
+        (errorMessage) => {}
+      ).catch(err => { console.error(err); showToast('⚠️ لا يمكن الوصول للكاميرا', 'warning'); closeBarcodeScanner(); });
+    } catch (err) { console.error(err); showToast('⚠️ حدث خطأ', 'warning'); }
+  }, 300);
+}
+
+async function closeBarcodeScanner() {
+  document.getElementById('barcode-modal').classList.add('hidden');
+  if (barcodeScanner) { try { await barcodeScanner.stop(); } catch(e) {} try { await barcodeScanner.clear(); } catch(e) {} barcodeScanner = null; }
+}
+
+async function loadMovements() {
+  const { data, error } = await supabaseClient.from('stock_movements').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(200);
+  if (error) { console.error('movements error:', error); movementsCache = []; } else { movementsCache = data || []; }
+  renderMovements();
+}
+
+function renderMovements() {
+  const total = movementsCache.length;
+  const inCount = movementsCache.filter(m => m.movement_type === 'in').length;
+  const outCount = movementsCache.filter(m => m.movement_type === 'out').length;
+  const adjCount = movementsCache.filter(m => m.movement_type === 'adjust').length;
+  document.getElementById('mov-total').textContent = total;
+  document.getElementById('mov-in').textContent = inCount;
+  document.getElementById('mov-out').textContent = outCount;
+  document.getElementById('mov-adjust').textContent = adjCount;
+  const tb = document.getElementById('movements-body');
+  if (!movementsCache.length) { tb.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 p-8">لا توجد حركات.</td></tr>'; return; }
+  const typeLabels = { 'in': { label: '📥 دخول', color: 'text-green-500' }, 'out': { label: '📤 خروج', color: 'text-red-500' }, 'adjust': { label: '⚙️ تعديل', color: 'text-orange-500' }, 'return': { label: '↩️ إرجاع', color: 'text-blue-500' }, 'damage': { label: '💔 تلف', color: 'text-red-700' } };
+  tb.innerHTML = movementsCache.map(m => { const batch = batchesCache.find(b => b.id === m.batch_id); const type = typeLabels[m.movement_type] || { label: m.movement_type, color: 'text-slate-500' }; return `<tr class="border-b"><td class="p-3 text-xs text-slate-500">${new Date(m.created_at).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })}</td><td class="p-3 ${type.color} font-bold text-sm">${type.label}</td><td class="p-3 font-bold">${batch ? esc(batch.name) : '—'}</td><td class="p-3 text-center font-bold">${m.quantity}</td><td class="p-3 text-xs">${esc(m.reason) || '—'}</td><td class="p-3 text-xs text-slate-500">${esc(m.reference) || '—'}</td></tr>`; }).join('');
+}
+
+function openMovementModal() {
+  const select = document.getElementById('mov-batch');
+  select.innerHTML = batchesCache.filter(b => b.qty > 0).map(b => `<option value="${b.id}">${esc(b.name)} — ${b.qty} ${esc(b.unit || 'قطعة')} (${esc(b.batch)})</option>`).join('');
+  if (!select.innerHTML) { showToast('⚠️ لا توجد أدوية', 'warning'); return; }
+  document.getElementById('movement-modal').classList.remove('hidden');
+}
+function closeMovementModal() { document.getElementById('movement-modal').classList.add('hidden'); }
+
+async function submitMovement(e) {
+  e.preventDefault();
+  const batchId = document.getElementById('mov-batch').value;
+  const type = document.getElementById('mov-type').value;
+  const qty = parseInt(document.getElementById('mov-qty').value);
+  const reason = document.getElementById('mov-reason').value.trim();
+  const ref = document.getElementById('mov-ref').value.trim();
+  if (!batchId || !type || !qty || qty <= 0) { showToast('⚠️ املأ كل الحقول', 'warning'); return; }
+  const batch = batchesCache.find(b => b.id === batchId);
+  if (!batch) { showToast('⚠️ الدواء غير موجود', 'error'); return; }
+  let newQty = batch.qty;
+  if (type === 'in' || type === 'return') newQty += qty;
+  else if (type === 'out' || type === 'damage') newQty -= qty;
+  else if (type === 'adjust') newQty = qty;
+  if (newQty < 0) { showToast('⚠️ الكمية لا تكفي', 'warning'); return; }
+  const { error: movErr } = await supabaseClient.from('stock_movements').insert({ batch_id: batchId, movement_type: type, quantity: qty, reason: reason || null, reference: ref || null, user_id: currentUser.id });
+  if (movErr) { showToast('❌ خطأ: ' + movErr.message, 'error'); return; }
+  const { error: batchErr } = await supabaseClient.from('batches').update({ qty: newQty }).eq('id', batchId);
+  if (batchErr) { showToast('❌ خطأ في تحديث الكمية', 'error'); return; }
+  closeMovementModal();
+  await loadBatches();
+  await loadMovements();
+  showToast('✅ تم تسجيل الحركة!', 'success');
+}
+
 function switchAuthTab(tab) {
-  ['login','signup'].forEach(t => {
-    document.getElementById('form-' + t).classList.toggle('hidden', t !== tab);
-    const btn = document.getElementById('auth-tab-' + t);
-    if (t === tab) {
-      btn.className = 'flex-1 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-white';
-      btn.style.background = 'linear-gradient(135deg, #0d9488, #14b8a6)';
-    } else {
-      btn.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 transition-all duration-300';
-      btn.style.background = 'transparent';
-    }
-  });
+  ['login','signup'].forEach(t => { document.getElementById('form-' + t).classList.toggle('hidden', t !== tab); const btn = document.getElementById('auth-tab-' + t); if (t === tab) { btn.className = 'flex-1 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-white'; btn.style.background = 'linear-gradient(135deg, #0d9488, #14b8a6)'; } else { btn.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 transition-all duration-300'; btn.style.background = 'transparent'; } });
   hideError('login-error'); hideError('signup-error');
 }
 
@@ -1396,10 +1413,7 @@ async function handleLogin(e) {
   hideError('login-error');
   const btn = document.getElementById('login-btn');
   btn.disabled = true; btn.textContent = 'جاري الدخول...';
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email: document.getElementById('login-email').value.trim(),
-    password: document.getElementById('login-password').value
-  });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('login-email').value.trim(), password: document.getElementById('login-password').value });
   if (error) { showError('login-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'دخول'; }
 }
 
@@ -1411,34 +1425,14 @@ async function handleSignup(e) {
   try {
     const email = document.getElementById('signup-email').value.trim();
     const fingerprint = window.__fingerprint || localStorage.getItem('fp') || 'unknown';
-    const { data, error } = await supabaseClient.auth.signUp({
-      email: email,
-      password: document.getElementById('signup-password').value,
-      options: { data: { pharmacy_name: document.getElementById('signup-pharmacy').value.trim(), fingerprint: fingerprint } }
-    });
+    const { data, error } = await supabaseClient.auth.signUp({ email: email, password: document.getElementById('signup-password').value, options: { data: { pharmacy_name: document.getElementById('signup-pharmacy').value.trim(), fingerprint: fingerprint } } });
     if (error) { showError('signup-error', translateAuthError(error.message)); btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; return; }
-    if (data.user && !data.session) {
-      pendingVerificationEmail = email;
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('auth-screen').classList.remove('flex');
-      document.getElementById('email-verify-screen').classList.remove('hidden');
-      document.getElementById('email-verify-screen').classList.add('flex');
-      document.getElementById('verify-email-display').textContent = email;
-      btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
-      return;
-    }
+    if (data.user && !data.session) { pendingVerificationEmail = email; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex'); document.getElementById('email-verify-screen').classList.remove('hidden'); document.getElementById('email-verify-screen').classList.add('flex'); document.getElementById('verify-email-display').textContent = email; btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; return; }
     if (data.session) { await saveFingerprint(data.user.id, fingerprint); return; }
-  } catch (err) {
-    showError('signup-error', 'خطأ: ' + err.message);
-    btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا';
-  }
+  } catch (err) { showError('signup-error', 'خطأ: ' + err.message); btn.disabled = false; btn.textContent = 'ابدأ تجربة 3 أيام مجانًا'; }
 }
 
-async function saveFingerprint(userId, fingerprint) {
-  try {
-    await supabaseClient.from('pharmacies').update({ device_fingerprint: fingerprint }).eq('user_id', userId);
-  } catch (err) { console.error('saveFingerprint:', err); }
-}
+async function saveFingerprint(userId, fingerprint) { try { await supabaseClient.from('pharmacies').update({ device_fingerprint: fingerprint }).eq('user_id', userId); } catch (err) { console.error('saveFingerprint:', err); } }
 
 async function resendVerification() {
   if (!pendingVerificationEmail) { alert('يرجى العودة لصفحة التسجيل.'); return; }
@@ -1456,53 +1450,38 @@ function cancelVerification() {
   pendingVerificationEmail = '';
 }
 
-async function handleLogout() {
-  if (!confirm('هل تريد تسجيل الخروج؟')) return;
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
+async function handleLogout() { if (!confirm('هل تريد تسجيل الخروج؟')) return; await supabaseClient.auth.signOut(); location.reload(); }
 
 function translateAuthError(msg) {
-  const map = {
-    'Invalid login credentials': 'البريد أو كلمة السر غير صحيحة.',
-    'Email not confirmed': 'يجب تأكيد البريد أولًا. تحقق من إيميلك.',
-    'User already registered': 'هذا البريد مسجّل مسبقًا.',
-    'Password should be at least 6 characters': 'كلمة السر 6 أحرف على الأقل.'
-  };
+  const map = { 'Invalid login credentials': 'البريد أو كلمة السر غير صحيحة.', 'Email not confirmed': 'يجب تأكيد البريد أولًا.', 'User already registered': 'هذا البريد مسجّل مسبقًا.', 'Password should be at least 6 characters': 'كلمة السر 6 أحرف على الأقل.' };
   return map[msg] || msg;
 }
 
-// ============================================================
-// Data Loading
-// ============================================================
 async function loadPharmacy() {
-  const { data, error } = await supabaseClient.from('pharmacies').select('*').maybeSingle();
-  if (error) { console.error(error); return; }
-  currentPharmacy = data;
-  applyPharmacyToUI();
+  const { data, error } = await supabaseClient.from('pharmacies').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(1);
+  if (error) { console.error('pharmacies error:', error); return; }
+  currentPharmacy = (data && data.length > 0) ? data[0] : null;
+  if (currentPharmacy) applyPharmacyToUI();
 }
 
 async function loadBranches() {
-  const { data, error } = await supabaseClient.from('branches').select('*').order('is_main', { ascending: false }).order('created_at', { ascending: true });
-  if (error) { console.error(error); return; }
+  const { data, error } = await supabaseClient.from('branches').select('*').eq('user_id', currentUser.id).order('is_main', { ascending: false }).order('created_at', { ascending: true });
+  if (error) { console.error('branches error:', error); return; }
   branchesCache = data || [];
   updateBranchSelectors();
   renderBranchesList();
 }
 
 async function loadBatches() {
-  const { data, error } = await supabaseClient.from('batches').select('*').order('expiry', { ascending: true });
-  if (error) { console.error(error); return; }
+  const { data, error } = await supabaseClient.from('batches').select('*').eq('user_id', currentUser.id).order('expiry', { ascending: true });
+  if (error) { console.error('batches error:', error); return; }
   batchesCache = data || [];
   renderAll();
 }
 
 function updateBranchSelectors() {
   const gf = document.getElementById('global-branch-filter');
-  if (gf) {
-    gf.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${currentBranchFilter === b.id ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
-    document.getElementById('branch-filter-bar').classList.toggle('hidden', branchesCache.length <= 1);
-  }
+  if (gf) { gf.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${currentBranchFilter === b.id ? ' selected' : ''}>${esc(b.name)}</option>`).join(''); document.getElementById('branch-filter-bar').classList.toggle('hidden', branchesCache.length <= 1); }
   const fb = document.getElementById('f-branch');
   if (fb) fb.innerHTML = branchesCache.map(b => `<option value="${b.id}"${b.is_main ? ' selected' : ''}>${esc(b.name)}</option>`).join('');
   const ib = document.getElementById('import-branch');
@@ -1511,23 +1490,12 @@ function updateBranchSelectors() {
   if (pb) pb.innerHTML = '<option value="all">كل الفروع (مدمج)</option>' + branchesCache.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
 }
 
-function onBranchFilterChange() {
-  currentBranchFilter = document.getElementById('global-branch-filter').value;
-  renderAll();
-}
+function onBranchFilterChange() { currentBranchFilter = document.getElementById('global-branch-filter').value; renderAll(); }
 
-// ============================================================
-// Branches CRUD
-// ============================================================
 async function addBranch(e) {
   e.preventDefault();
   if (isAccountLocked) { showToast('⚠️ حسابك مقفل.', 'warning'); return; }
-  const newBranch = {
-    name: document.getElementById('b-name').value.trim(),
-    phone: document.getElementById('b-phone').value.trim(),
-    address: document.getElementById('b-address').value.trim(),
-    is_main: false
-  };
+  const newBranch = { name: document.getElementById('b-name').value.trim(), phone: document.getElementById('b-phone').value.trim(), address: document.getElementById('b-address').value.trim(), is_main: false, user_id: currentUser.id };
   if (!newBranch.name) { showToast('⚠️ اسم الفرع مطلوب.', 'warning'); return; }
   const { error } = await supabaseClient.from('branches').insert(newBranch);
   if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
@@ -1568,45 +1536,29 @@ function renderBranchesList() {
   if (!list) return;
   countEl.textContent = branchesCache.length;
   if (!branchesCache.length) { list.innerHTML = '<p class="text-slate-500 text-center py-8">لا توجد فروع.</p>'; return; }
-  list.innerHTML = branchesCache.map(b => {
-    const branchBatches = batchesCache.filter(x => x.branch_id === b.id);
-    const count = branchBatches.length;
-    const value = branchBatches.reduce((s, x) => s + x.qty * Number(x.cost), 0);
-    return `<div class="glass p-4 rounded-xl flex justify-between items-center flex-wrap gap-3">
-      <div class="flex-1 min-w-[200px]">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">${b.is_main ? '⭐' : '🏪'}</span>
-          <span class="font-black text-lg">${esc(b.name)}</span>
-          ${b.is_main ? '<span class="text-xs bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-lg font-bold">رئيسي</span>' : ''}
-        </div>
-        ${b.address ? `<div class="text-xs text-slate-500 mt-1">📍 ${esc(b.address)}</div>` : ''}
-        ${b.phone ? `<div class="text-xs text-slate-500 mt-1">📞 ${esc(b.phone)}</div>` : ''}
-        <div class="text-xs text-slate-500 mt-2">${count} دواء — قيمة: <b>${value.toFixed(2)} ج.م</b></div>
-      </div>
-      <div class="flex gap-2">
-        <button onclick="renameBranch('${b.id}')" class="text-teal-600 hover:text-teal-800 text-xs font-bold px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-900/30">تعديل</button>
-        ${!b.is_main ? `<button onclick="deleteBranch('${b.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/30">حذف</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  list.innerHTML = branchesCache.map(b => { const branchBatches = batchesCache.filter(x => x.branch_id === b.id); const count = branchBatches.length; const value = branchBatches.reduce((s, x) => s + (parseFloat(x.cost) || 0) * (parseInt(x.qty) || 0), 0); return `<div class="glass p-4 rounded-xl flex justify-between items-center flex-wrap gap-3"><div class="flex-1 min-w-[200px]"><div class="flex items-center gap-2"><span class="text-lg">${b.is_main ? '⭐' : '🏪'}</span><span class="font-black text-lg">${esc(b.name)}</span>${b.is_main ? '<span class="text-xs bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-lg font-bold">رئيسي</span>' : ''}</div>${b.address ? `<div class="text-xs text-slate-500 mt-1">📍 ${esc(b.address)}</div>` : ''}${b.phone ? `<div class="text-xs text-slate-500 mt-1">📞 ${esc(b.phone)}</div>` : ''}<div class="text-xs text-slate-500 mt-2">${count} دواء — قيمة: <b>${value.toFixed(2)} ج.م</b></div></div><div class="flex gap-2"><button onclick="renameBranch('${b.id}')" class="text-teal-600 hover:text-teal-800 text-xs font-bold px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-900/30">تعديل</button>${!b.is_main ? `<button onclick="deleteBranch('${b.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/30">حذف</button>` : ''}</div></div>`; }).join('');
 }
 
-// ============================================================
-// Medicine CRUD
-// ============================================================
 async function addMedicine(e) {
   e.preventDefault();
   if (isAccountLocked) { showToast('⚠️ حسابك مقفل.', 'warning'); return; }
   const branchId = document.getElementById('f-branch').value;
   if (!branchId) { showToast('⚠️ اختر الفرع أولًا.', 'warning'); return; }
   const newBatch = {
-    branch_id: branchId,
+    branch_id: branchId, user_id: currentUser.id,
     name: document.getElementById('f-name').value.trim(),
+    sku: document.getElementById('f-sku').value.trim() || null,
+    barcode: document.getElementById('f-barcode').value.trim() || null,
     category: document.getElementById('f-category').value || 'غير مصنّف',
+    group_name: document.getElementById('f-group').value || 'غير محددة',
+    unit: document.getElementById('f-unit').value || 'قطعة',
     batch: document.getElementById('f-batch').value.trim(),
     expiry: document.getElementById('f-expiry').value,
     qty: parseInt(document.getElementById('f-qty').value),
+    min_stock: parseInt(document.getElementById('f-min-stock').value) || 0,
     cost: parseFloat(document.getElementById('f-cost').value),
+    sell_price: parseFloat(document.getElementById('f-sell-price').value) || 0,
+    reserved_qty: 0,
     supplier: document.getElementById('f-supplier').value.trim() || 'غير محدد'
   };
   const { error } = await supabaseClient.from('batches').insert(newBatch);
@@ -1625,17 +1577,10 @@ async function deleteBatch(id) {
   showToast('✅ تم الحذف', 'success');
 }
 
-// ============================================================
-// Rendering
-// ============================================================
 function renderStats() {
   const a = getFilteredBatches().filter(b => b.qty > 0);
   let s30=0, s60=0, val=0;
-  a.forEach(b => {
-    const d = daysUntilExpiry(b.expiry);
-    if (d <= 30) s30++; else if (d <= 60) s60++;
-    if (d <= 90) val += b.qty * Number(b.cost);
-  });
+  a.forEach(b => { const d = daysUntilExpiry(b.expiry); if (d <= 30) s30++; else if (d <= 60) s60++; if (d <= 90) val += (parseInt(b.qty) || 0) * (parseFloat(b.cost) || 0); });
   document.getElementById('stat-total').textContent = a.length;
   document.getElementById('stat-30').textContent = s30;
   document.getElementById('stat-60').textContent = s60;
@@ -1644,160 +1589,174 @@ function renderStats() {
 }
 
 function renderAlerts() {
-  const e = getFilteredBatches().filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) })).filter(b => b.days <= 90).sort((a,b) => a.days - b.days);
+  const e = getFilteredBatches().filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: parseFloat(b.cost) || 0 })).filter(b => b.days <= 90 || isLowStock(b)).sort((a,b) => a.days - b.days);
   const c = document.getElementById('alerts-container');
-  if (!e.length) { c.innerHTML = '<div class="text-center py-12"><div class="text-6xl mb-4">✅</div><p class="text-slate-500 font-bold">لا توجد أدوية تنتهي خلال 90 يومًا.</p></div>'; return; }
+  if (!e.length) { c.innerHTML = '<div class="text-center py-12"><div class="text-6xl mb-4">✅</div><p class="text-slate-500 font-bold">لا توجد تنبيهات.</p></div>'; return; }
   c.innerHTML = e.map(b => {
     let cls, badgeCls, badgeLabel;
     if (b.days < 0) { cls = 'alert-expired'; badgeCls = 'badge-expired'; badgeLabel = 'منتهي'; }
     else if (b.days <= 30) { cls = 'alert-critical'; badgeCls = 'badge-critical'; badgeLabel = 'خطر'; }
     else if (b.days <= 60) { cls = 'alert-warning'; badgeCls = 'badge-warning'; badgeLabel = 'تحذير'; }
-    else { cls = 'alert-watch'; badgeCls = 'badge-watch'; badgeLabel = 'مراقبة'; }
-    const dt = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `متبقي ${b.days} يوم`;
+    else if (b.days <= 90) { cls = 'alert-watch'; badgeCls = 'badge-watch'; badgeLabel = 'مراقبة'; }
+    else { cls = 'alert-watch'; badgeCls = 'badge-watch'; badgeLabel = 'مخزون'; }
+    const dt = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : b.days <= 90 ? `متبقي ${b.days} يوم` : '';
     const branchName = branchesCache.length > 1 ? ` | فرع: <b>${esc(getBranchName(b.branch_id))}</b>` : '';
     const catColor = getCategoryColor(b.category || 'غير مصنّف');
-    return `<div class="alert-card ${cls} animate-fade-in">
-      <div class="flex justify-between items-start flex-wrap gap-2">
-        <div>
-          <div class="alert-name font-black text-lg flex items-center gap-2 flex-wrap">
-            ${esc(b.name)}
-            <span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span>
-          </div>
-          <div class="alert-meta text-sm mt-1">تشغيلة: ${esc(b.batch)}${branchName} | كمية: <b>${b.qty}</b> | قيمة: <b>${(b.qty*b.cost).toFixed(2)} ج.م</b> | مورد: ${esc(b.supplier)}</div>
-        </div>
-        <div class="text-left">
-          <span class="badge ${badgeCls}">${badgeLabel}</span>
-          <div class="alert-days text-sm font-black mt-2">${dt}</div>
-        </div>
-      </div>
-    </div>`;
+    const groupColor = getGroupColor(b.group_name || 'غير محددة');
+    const lowBadge = isLowStock(b) ? '<span class="low-stock-badge ml-2">📉 مخزون منخفض</span>' : '';
+    return `<div class="alert-card ${cls} animate-fade-in"><div class="flex justify-between items-start flex-wrap gap-2"><div class="flex-1 min-w-0"><div class="alert-name font-black text-lg flex items-center gap-2 flex-wrap">${esc(b.name)}<span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span>${b.group_name && b.group_name !== 'غير محددة' ? `<span class="category-badge" style="background: ${groupColor};">${esc(b.group_name)}</span>` : ''}${lowBadge}</div><div class="alert-meta text-sm mt-1">${b.sku ? `SKU: <b>${esc(b.sku)}</b> | ` : ''}تشغيلة: ${esc(b.batch)}${branchName} | كمية: <b>${b.qty} ${esc(b.unit || 'قطعة')}</b> | قيمة: <b>${((parseInt(b.qty) || 0) * (parseFloat(b.cost) || 0)).toFixed(2)} ج.م</b> | مورد: ${esc(b.supplier)}</div></div><div class="text-left"><span class="badge ${badgeCls}">${badgeLabel}</span>${dt ? `<div class="alert-days text-sm font-black mt-2">${dt}</div>` : ''}</div></div></div>`;
   }).join('');
 }
 
 function renderInventory() {
   const s = (document.getElementById('search-input')?.value || '').toLowerCase();
-  const b = getFilteredBatches().filter(x => x.name.toLowerCase().includes(s) || (x.batch||'').toLowerCase().includes(s)).sort((a,c) => daysUntilExpiry(a.expiry) - daysUntilExpiry(c.expiry));
+  const b = getFilteredBatches().filter(x => x.name.toLowerCase().includes(s) || (x.batch||'').toLowerCase().includes(s) || (x.sku||'').toLowerCase().includes(s) || (x.barcode||'').toLowerCase().includes(s) || (x.supplier||'').toLowerCase().includes(s)).sort((a,c) => daysUntilExpiry(a.expiry) - daysUntilExpiry(c.expiry));
   const tb = document.getElementById('inventory-body');
-  if (!b.length) { tb.innerHTML = '<tr><td colspan="10" class="text-center text-slate-500 p-8">لا توجد دفعات.</td></tr>'; return; }
+  if (!b.length) { tb.innerHTML = '<tr><td colspan="13" class="text-center text-slate-500 p-8">لا توجد دفعات.</td></tr>'; return; }
   const showBranch = branchesCache.length > 1;
   tb.innerHTML = b.map(x => {
     const d = daysUntilExpiry(x.expiry), st = getStatus(d);
-    const cost = Number(x.cost);
+    const cost = parseFloat(x.cost) || 0;
     const catColor = getCategoryColor(x.category || 'غير مصنّف');
-    return `<tr class="border-b">
-      <td class="p-3 font-bold">${esc(x.name)}</td>
-      <td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(x.category || 'غير مصنّف')}</span></td>
-      ${showBranch ? `<td class="p-3 text-xs text-slate-500">${esc(getBranchName(x.branch_id))}</td>` : '<td class="p-3 text-xs text-slate-500">—</td>'}
-      <td class="p-3 text-slate-500">${esc(x.batch)}</td>
-      <td class="p-3">${x.expiry}</td>
-      <td class="p-3 text-left font-bold">${x.qty}</td>
-      <td class="p-3 text-left">${cost.toFixed(2)} ج.م</td>
-      <td class="p-3 text-center font-black">${d}</td>
-      <td class="p-3 text-center"><span class="${st.color} text-xs px-2 py-1 rounded-lg font-bold">${st.label}</span></td>
-      <td class="p-3 text-center"><button onclick="deleteBatch('${x.id}')" class="text-red-500 text-xs font-bold">حذف</button></td>
-    </tr>`;
+    const groupColor = getGroupColor(x.group_name || 'غير محددة');
+    const available = getAvailableQty(x);
+    const low = isLowStock(x);
+    return `<tr class="border-b ${low ? 'low-stock-row' : ''}"><td class="p-3 font-bold">${esc(x.name)}${low ? ' 📉' : ''}</td><td class="p-3 text-xs text-slate-500">${esc(x.sku || '—')}</td><td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(x.category || 'غير مصنّف')}</span></td><td class="p-3">${x.group_name && x.group_name !== 'غير محددة' ? `<span class="category-badge" style="background: ${groupColor};">${esc(x.group_name)}</span>` : '<span class="text-xs text-slate-400">—</span>'}</td>${showBranch ? `<td class="p-3 text-xs text-slate-500">${esc(getBranchName(x.branch_id))}</td>` : '<td class="p-3 text-xs text-slate-500">—</td>'}<td class="p-3 text-center"><span class="unit-badge">${esc(x.unit || 'قطعة')}</span></td><td class="p-3 text-center font-bold">${x.qty}</td><td class="p-3 text-center font-bold text-green-600">${available}</td><td class="p-3 text-center ${low ? 'text-red-500 font-black' : 'text-slate-500'}">${x.min_stock || 0}</td><td class="p-3">${x.expiry}</td><td class="p-3 text-center font-black">${d}</td><td class="p-3 text-center"><span class="${st.color} text-xs px-2 py-1 rounded-lg font-bold">${st.label}</span></td><td class="p-3 text-center"><button onclick="deleteBatch('${x.id}')" class="text-red-500 text-xs font-bold">حذف</button></td></tr>`;
   }).join('');
 }
 
 function renderAll() { renderStats(); renderAlerts(); renderInventory(); initNotifications(); }
 
-// ============================================================
-// Export to Excel
-// ============================================================
+function toggleStatusFilter(status) { currentStatusFilter = status; document.querySelectorAll('.filter-chip').forEach(btn => { btn.classList.toggle('active', btn.dataset.status === status); }); renderAdvancedSearch(); }
+
+function resetAdvancedSearch() {
+  document.getElementById('adv-search-input').value = '';
+  document.getElementById('adv-search-branch').value = 'all';
+  document.getElementById('adv-search-category').value = 'all';
+  document.getElementById('adv-search-group').value = 'all';
+  document.getElementById('adv-search-supplier').value = 'all';
+  document.getElementById('adv-min-price').value = '';
+  document.getElementById('adv-max-price').value = '';
+  currentStatusFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.status === 'all'));
+  renderAdvancedSearch();
+}
+
+function renderAdvancedSearch() {
+  const q = (document.getElementById('adv-search-input')?.value || '').toLowerCase();
+  const branch = document.getElementById('adv-search-branch')?.value || 'all';
+  const category = document.getElementById('adv-search-category')?.value || 'all';
+  const group = document.getElementById('adv-search-group')?.value || 'all';
+  const supplier = document.getElementById('adv-search-supplier')?.value || 'all';
+  const minPrice = parseFloat(document.getElementById('adv-min-price')?.value) || 0;
+  const maxPrice = parseFloat(document.getElementById('adv-max-price')?.value) || Infinity;
+  const brSelect = document.getElementById('adv-search-branch');
+  if (brSelect) { const cur = brSelect.value; brSelect.innerHTML = '<option value="all">كل الفروع</option>' + branchesCache.map(b => `<option value="${b.id}"${b.id === cur ? ' selected' : ''}>${esc(b.name)}</option>`).join(''); }
+  const supSelect = document.getElementById('adv-search-supplier');
+  if (supSelect) { const sups = [...new Set(batchesCache.map(b => b.supplier).filter(Boolean))]; const cur = supSelect.value; supSelect.innerHTML = '<option value="all">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join(''); }
+  let results = batchesCache.filter(b => b.qty > 0);
+  if (q) results = results.filter(b => b.name.toLowerCase().includes(q) || (b.batch || '').toLowerCase().includes(q) || (b.sku || '').toLowerCase().includes(q) || (b.barcode || '').toLowerCase().includes(q) || (b.supplier || '').toLowerCase().includes(q) || (b.category || '').toLowerCase().includes(q) || (b.group_name || '').toLowerCase().includes(q));
+  if (branch !== 'all') results = results.filter(b => b.branch_id === branch);
+  if (category !== 'all') results = results.filter(b => b.category === category);
+  if (group !== 'all') results = results.filter(b => b.group_name === group);
+  if (supplier !== 'all') results = results.filter(b => b.supplier === supplier);
+  if (minPrice > 0) results = results.filter(b => (parseFloat(b.cost) || 0) >= minPrice);
+  if (maxPrice < Infinity) results = results.filter(b => (parseFloat(b.cost) || 0) <= maxPrice);
+  if (currentStatusFilter !== 'all') {
+    results = results.filter(b => {
+      const d = daysUntilExpiry(b.expiry);
+      if (currentStatusFilter === 'expired') return d < 0;
+      if (currentStatusFilter === 'critical') return d >= 0 && d <= 30;
+      if (currentStatusFilter === 'warning') return d > 30 && d <= 60;
+      if (currentStatusFilter === 'watch') return d > 60 && d <= 90;
+      if (currentStatusFilter === 'safe') return d > 90;
+      if (currentStatusFilter === 'low-stock') return isLowStock(b);
+      return true;
+    });
+  }
+  results.sort((a, b) => daysUntilExpiry(a.expiry) - daysUntilExpiry(b.expiry));
+  const tb = document.getElementById('adv-results-body');
+  const countEl = document.getElementById('adv-results-count');
+  const summaryEl = document.getElementById('adv-results-summary');
+  if (!results.length) { tb.innerHTML = '<tr><td colspan="10" class="text-center text-slate-500 p-8">لا توجد نتائج.</td></tr>'; countEl.textContent = '0'; summaryEl.textContent = ''; return; }
+  const totalValue = results.reduce((s, b) => s + (parseInt(b.qty) || 0) * (parseFloat(b.cost) || 0), 0);
+  countEl.textContent = results.length;
+  summaryEl.textContent = `القيمة الإجمالية: ${fmtMoney(totalValue)} ج.م`;
+  tb.innerHTML = results.slice(0, 100).map(b => {
+    const d = daysUntilExpiry(b.expiry);
+    const st = getStatus(d);
+    const catColor = getCategoryColor(b.category || 'غير مصنّف');
+    const groupColor = getGroupColor(b.group_name || 'غير محددة');
+    return `<tr class="border-b ${isLowStock(b) ? 'low-stock-row' : ''}"><td class="p-3 font-bold">${esc(b.name)}</td><td class="p-3 text-xs text-slate-500">${esc(b.sku || '—')}</td><td class="p-3"><span class="category-badge" style="background: ${catColor};">${esc(b.category || 'غير مصنّف')}</span></td><td class="p-3">${b.group_name && b.group_name !== 'غير محددة' ? `<span class="category-badge" style="background: ${groupColor};">${esc(b.group_name)}</span>` : '—'}</td><td class="p-3 text-xs text-slate-500">${esc(getBranchName(b.branch_id))}</td><td class="p-3 text-xs text-slate-500">${esc(b.supplier)}</td><td class="p-3">${b.expiry}</td><td class="p-3 text-center">${b.qty}</td><td class="p-3 text-center">${((parseInt(b.qty) || 0) * (parseFloat(b.cost) || 0)).toFixed(0)}</td><td class="p-3 text-center"><span class="${st.color} text-xs px-2 py-1 rounded-lg font-bold">${st.label}</span></td></tr>`;
+  }).join('') + (results.length > 100 ? `<tr><td colspan="10" class="text-center text-slate-500 p-3 text-xs">يتم عرض أول 100 من ${results.length}</td></tr>` : '');
+}
+
 function exportAnalyticsToExcel() {
-  if (!batchesCache.length) { showToast('⚠️ لا توجد بيانات للتصدير.', 'warning'); return; }
+  if (!batchesCache.length) { showToast('⚠️ لا توجد بيانات.', 'warning'); return; }
   try {
     const activeBatches = batchesCache.filter(b => b.qty > 0);
     const wb = XLSX.utils.book_new();
-
-    const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+    const totalValue = activeBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
     const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
-    const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+    const riskValue = riskBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
     const expiredCount = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
     const safeCount = activeBatches.length - riskBatches.length;
     const rescueRate = activeBatches.length > 0 ? Math.round((safeCount / activeBatches.length) * 100) : 0;
-
-    const summaryData = [
-      ['📊 تقرير صلاحية — ملخص التحليلات'],
-      ['التاريخ', new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })],
-      ['اسم الصيدلية', currentPharmacy?.name || '—'],
-      [''],
-      ['المؤشر', 'القيمة'],
-      ['إجمالي الدفعات', activeBatches.length],
-      ['إجمالي قيمة المخزون (ج.م)', totalValue.toFixed(2)],
-      ['عدد الأدوية المعرّضة للخطر (≤90 يوم)', riskBatches.length],
-      ['قيمة الأدوية المعرّضة للخطر (ج.م)', riskValue.toFixed(2)],
-      ['عدد الأدوية المنتهية', expiredCount],
-      ['عدد الأدوية السليمة', safeCount],
-      ['نسبة الإنقاذ (%)', rescueRate + '%'],
-      ['عدد الفروع', branchesCache.length]
-    ];
+    const lowStockCount = activeBatches.filter(b => isLowStock(b)).length;
+    const expectedProfit = activeBatches.reduce((s, b) => { const sellPrice = parseFloat(b.sell_price) || (parseFloat(b.cost) || 0) * 1.2; return s + (sellPrice - (parseFloat(b.cost) || 0)) * b.qty; }, 0);
+    const summaryData = [['📊 تقرير صلاحية — ملخص'], ['التاريخ', new Date().toLocaleDateString('ar-EG')], ['اسم الصيدلية', currentPharmacy?.name || '—'], [''], ['المؤشر', 'القيمة'], ['إجمالي الدفعات', activeBatches.length], ['إجمالي قيمة المخزون (ج.م)', totalValue.toFixed(2)], ['الأرباح المتوقعة (ج.م)', expectedProfit.toFixed(2)], ['عدد الأدوية المعرّضة للخطر', riskBatches.length], ['قيمة الأدوية المعرّضة للخطر (ج.م)', riskValue.toFixed(2)], ['عدد الأدوية المنتهية', expiredCount], ['عدد الأدوية تحت الحد الأدنى', lowStockCount], ['عدد الأدوية السليمة', safeCount], ['نسبة الإنقاذ (%)', rescueRate + '%'], ['عدد الفروع', branchesCache.length], ['عدد التصنيفات', categoriesCache.length], ['عدد المجموعات', groupsCache.length]];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     ws1['!cols'] = [{ wch: 35 }, { wch: 25 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'ملخص');
-
-    const inventoryData = [['اسم الدواء', 'التصنيف', 'الفرع', 'رقم التشغيلة', 'تاريخ الانتهاء', 'الكمية', 'سعر التكلفة', 'القيمة الإجمالية', 'المورد', 'الأيام المتبقية', 'الحالة']];
-    activeBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) })).sort((a, b) => a.days - b.days).forEach(b => {
+    const inventoryData = [['اسم الدواء', 'SKU', 'Barcode', 'التصنيف', 'المجموعة', 'الفرع', 'الوحدة', 'الكمية', 'المتاحة', 'الحد الأدنى', 'التشغيلة', 'الانتهاء', 'سعر الشراء', 'سعر البيع', 'القيمة', 'الربح المتوقع', 'المورد', 'الأيام', 'الحالة']];
+    activeBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: parseFloat(b.cost) || 0 })).sort((a, b) => a.days - b.days).forEach(b => {
       const status = b.days < 0 ? 'منتهي' : b.days <= 30 ? 'خطر' : b.days <= 60 ? 'تحذير' : b.days <= 90 ? 'مراقبة' : 'سليم';
-      inventoryData.push([b.name, b.category || 'غير مصنّف', getBranchName(b.branch_id), b.batch || '—', b.expiry, b.qty, b.cost.toFixed(2), (b.qty * b.cost).toFixed(2), b.supplier || '—', b.days, status]);
+      const sellPrice = parseFloat(b.sell_price) || 0;
+      const profit = (sellPrice - b.cost) * b.qty;
+      inventoryData.push([b.name, b.sku || '—', b.barcode || '—', b.category || 'غير مصنّف', b.group_name || 'غير محددة', getBranchName(b.branch_id), b.unit || 'قطعة', b.qty, getAvailableQty(b), b.min_stock || 0, b.batch || '—', b.expiry, b.cost.toFixed(2), sellPrice.toFixed(2), (b.qty * b.cost).toFixed(2), profit.toFixed(2), b.supplier || '—', b.days, status]);
     });
     const ws2 = XLSX.utils.aoa_to_sheet(inventoryData);
-    ws2['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 20 }, { wch: 14 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws2, 'المخزون');
-
-    const categoryMap = {};
-    activeBatches.forEach(b => {
-      const c = b.category || 'غير مصنّف';
-      if (!categoryMap[c]) categoryMap[c] = { count: 0, value: 0 };
-      categoryMap[c].count++;
-      categoryMap[c].value += b.qty * Number(b.cost);
-    });
-    const categoriesData = [['التصنيف', 'عدد الأدوية', 'القيمة (ج.م)']];
-    Object.entries(categoryMap).forEach(([name, data]) => categoriesData.push([name, data.count, data.value.toFixed(2)]));
-    const ws3 = XLSX.utils.aoa_to_sheet(categoriesData);
-    ws3['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 20 }];
-    XLSX.utils.book_append_sheet(wb, ws3, 'التصنيفات');
-
+    const lowStockData = [['اسم الدواء', 'SKU', 'الكمية', 'الحد الأدنى', 'النقص', 'الفرع', 'الوحدة']];
+    activeBatches.filter(b => isLowStock(b)).forEach(b => { lowStockData.push([b.name, b.sku || '—', b.qty, b.min_stock, (b.min_stock - b.qty), getBranchName(b.branch_id), b.unit || 'قطعة']); });
+    const ws3 = XLSX.utils.aoa_to_sheet(lowStockData);
+    XLSX.utils.book_append_sheet(wb, ws3, 'مخزون منخفض');
     const supplierMap = {};
-    activeBatches.forEach(b => {
-      const s = b.supplier || 'غير محدد';
-      if (!supplierMap[s]) supplierMap[s] = { count: 0, value: 0, riskCount: 0 };
-      supplierMap[s].count++;
-      supplierMap[s].value += b.qty * Number(b.cost);
-      if (daysUntilExpiry(b.expiry) <= 90) supplierMap[s].riskCount++;
-    });
-    const suppliersData = [['المورد', 'عدد الأدوية', 'القيمة الإجمالية (ج.م)', 'عدد المعرّض للخطر']];
+    activeBatches.forEach(b => { const s = b.supplier || 'غير محدد'; if (!supplierMap[s]) supplierMap[s] = { count: 0, value: 0, riskCount: 0 }; supplierMap[s].count++; supplierMap[s].value += b.qty * (parseFloat(b.cost) || 0); if (daysUntilExpiry(b.expiry) <= 90) supplierMap[s].riskCount++; });
+    const suppliersData = [['المورد', 'عدد الأدوية', 'القيمة', 'المعرّض للخطر']];
     Object.entries(supplierMap).sort((a, b) => b[1].value - a[1].value).forEach(([name, data]) => suppliersData.push([name, data.count, data.value.toFixed(2), data.riskCount]));
     const ws4 = XLSX.utils.aoa_to_sheet(suppliersData);
-    ws4['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 22 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws4, 'الموردين');
-
-    const branchesData = [['الفرع', 'عدد الأدوية', 'القيمة الإجمالية (ج.م)', 'عدد المعرّض للخطر', 'صحة الفرع (%)']];
-    branchesCache.forEach(br => {
-      const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0);
-      const count = brBatches.length;
-      const value = brBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-      const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length;
-      const health = count > 0 ? Math.round(((count - risk) / count) * 100) : 100;
-      branchesData.push([br.name, count, value.toFixed(2), risk, health + '%']);
-    });
+    const branchesData = [['الفرع', 'الأدوية', 'القيمة', 'الخطر', 'الصحة %']];
+    branchesCache.forEach(br => { const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0); const count = brBatches.length; const value = brBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0); const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length; const health = count > 0 ? Math.round(((count - risk) / count) * 100) : 100; branchesData.push([br.name, count, value.toFixed(2), risk, health + '%']); });
     const ws5 = XLSX.utils.aoa_to_sheet(branchesData);
-    ws5['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 22 }, { wch: 20 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(wb, ws5, 'الفروع');
-
+    const catData = [['التصنيف', 'الأدوية', 'القيمة']];
+    categoriesCache.forEach(c => { const cBatches = activeBatches.filter(b => b.category === c.name); const value = cBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0); catData.push([c.name, cBatches.length, value.toFixed(2)]); });
+    const ws6 = XLSX.utils.aoa_to_sheet(catData);
+    XLSX.utils.book_append_sheet(wb, ws6, 'التصنيفات');
+    const groupData = [['المجموعة', 'الأدوية', 'القيمة']];
+    groupsCache.forEach(g => { const gBatches = activeBatches.filter(b => b.group_name === g.name); const value = gBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0); groupData.push([g.name, gBatches.length, value.toFixed(2)]); });
+    const ws7 = XLSX.utils.aoa_to_sheet(groupData);
+    XLSX.utils.book_append_sheet(wb, ws7, 'المجموعات');
     const pharmacyName = (currentPharmacy?.name || 'salahiya').replace(/[^\u0600-\u06FF\w]/g, '_');
-    const fileName = `salahiya-analytics-${pharmacyName}-${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    showToast('✅ تم تصدير التحليلات بنجاح!', 'success');
-  } catch (err) {
-    console.error('Export error:', err);
-    showToast('❌ حدث خطأ أثناء التصدير', 'error');
-  }
+    XLSX.writeFile(wb, `salahiya-analytics-${pharmacyName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('✅ تم تصدير التحليلات!', 'success');
+  } catch (err) { console.error('Export error:', err); showToast('❌ حدث خطأ', 'error'); }
 }
 
-// ============================================================
-// PDF Generation
-// ============================================================
+function exportLowStock() {
+  const lowStock = batchesCache.filter(b => b.qty > 0 && isLowStock(b));
+  if (!lowStock.length) { showToast('✅ لا توجد أدوية تحت الحد الأدنى!', 'success'); return; }
+  const wb = XLSX.utils.book_new();
+  const data = [['اسم الدواء', 'SKU', 'الكمية', 'الحد الأدنى', 'النقص', 'الفرع', 'الوحدة', 'المورد']];
+  lowStock.forEach(b => { data.push([b.name, b.sku || '—', b.qty, b.min_stock, (b.min_stock - b.qty), getBranchName(b.branch_id), b.unit || 'قطعة', b.supplier || '—']); });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, 'مخزون منخفض');
+  XLSX.writeFile(wb, `salahiya-low-stock-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  showToast('✅ تم التصدير!', 'success');
+}
+
 function generateAdvancedPDF(type) {
   if (!batchesCache.length) { showToast('⚠️ لا توجد بيانات.', 'warning'); return; }
   try {
@@ -1805,45 +1764,19 @@ function generateAdvancedPDF(type) {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const activeBatches = batchesCache.filter(b => b.qty > 0);
     const pharmacy = currentPharmacy || {};
-
     if (type === 'analytics') {
-      doc.setFontSize(20);
-      doc.setTextColor(13, 148, 136);
-      doc.text('Salahiya', 105, 15, { align: 'center' });
-      doc.setFontSize(14);
-      doc.setTextColor(51, 51, 51);
-      doc.text('Analytics Report', 105, 24, { align: 'center' });
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(pharmacy.name || 'Pharmacy', 105, 30, { align: 'center' });
+      doc.setFontSize(20); doc.setTextColor(13, 148, 136); doc.text('Salahiya', 105, 15, { align: 'center' });
+      doc.setFontSize(14); doc.setTextColor(51, 51, 51); doc.text('Analytics Report', 105, 24, { align: 'center' });
+      doc.setFontSize(10); doc.setTextColor(100, 100, 100); doc.text(pharmacy.name || 'Pharmacy', 105, 30, { align: 'center' });
       doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 105, 35, { align: 'center' });
-
-      const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const totalValue = activeBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
       const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
-      const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+      const riskValue = riskBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
       const safeCount = activeBatches.length - riskBatches.length;
       const rescueRate = activeBatches.length > 0 ? Math.round((safeCount / activeBatches.length) * 100) : 0;
-
-      doc.setFontSize(12);
-      doc.setTextColor(13, 148, 136);
-      doc.text('Key Metrics', 105, 48, { align: 'center' });
-
-      doc.autoTable({
-        startY: 52,
-        head: [['Metric', 'Value']],
-        body: [
-          ['Total Batches', activeBatches.length.toString()],
-          ['Total Value (EGP)', totalValue.toFixed(0)],
-          ['Batches at Risk', riskBatches.length.toString()],
-          ['Value at Risk (EGP)', riskValue.toFixed(0)],
-          ['Rescue Rate', rescueRate + '%']
-        ],
-        theme: 'striped',
-        headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 10 },
-        bodyStyles: { fontSize: 10 },
-        styles: { halign: 'left' }
-      });
-
+      const expectedProfit = activeBatches.reduce((s, b) => { const sp = parseFloat(b.sell_price) || (parseFloat(b.cost) || 0) * 1.2; return s + (sp - (parseFloat(b.cost) || 0)) * b.qty; }, 0);
+      const lowStockCount = activeBatches.filter(b => isLowStock(b)).length;
+      doc.autoTable({ startY: 42, head: [['Metric', 'Value']], body: [['Total Batches', activeBatches.length.toString()], ['Total Value (EGP)', totalValue.toFixed(0)], ['Expected Profit (EGP)', expectedProfit.toFixed(0)], ['Batches at Risk', riskBatches.length.toString()], ['Value at Risk (EGP)', riskValue.toFixed(0)], ['Low Stock Items', lowStockCount.toString()], ['Rescue Rate', rescueRate + '%']], theme: 'striped', headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 10 }, bodyStyles: { fontSize: 10 } });
       doc.save(`salahiya-analytics-${Date.now()}.pdf`);
       showToast('✅ تم تحميل التقرير!', 'success');
     } else if (type === 'supplier-report') {
@@ -1852,234 +1785,115 @@ function generateAdvancedPDF(type) {
       const pBranch = document.getElementById('p-branch').value;
       let source = batchesCache;
       if (pBranch !== 'all') source = source.filter(b => b.branch_id === pBranch);
-      let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) }));
+      let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: parseFloat(b.cost) || 0 }));
       list = list.filter(b => b.days <= range);
       if (sup) list = list.filter(b => b.supplier === sup);
       list.sort((a, b) => a.days - b.days);
-
       if (!list.length) { showToast('⚠️ لا توجد أدوية مطابقة.', 'warning'); return; }
-
-      doc.setFontSize(18);
-      doc.setTextColor(13, 148, 136);
-      doc.text(pharmacy.name || 'Pharmacy', 105, 15, { align: 'center' });
-      doc.setFontSize(14);
-      doc.setTextColor(51, 51, 51);
-      doc.text('Supplier Return Report', 105, 24, { align: 'center' });
-
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(18); doc.setTextColor(13, 148, 136); doc.text(pharmacy.name || 'Pharmacy', 105, 15, { align: 'center' });
+      doc.setFontSize(14); doc.setTextColor(51, 51, 51); doc.text('Supplier Return Report', 105, 24, { align: 'center' });
+      doc.setFontSize(10); doc.setTextColor(100, 100, 100);
       if (pharmacy.phone) doc.text(`Phone: ${pharmacy.phone}`, 105, 30, { align: 'center' });
       doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 105, 35, { align: 'center' });
-
-      doc.autoTable({
-        startY: 42,
-        head: [['#', 'Medicine', 'Batch', 'Expiry', 'Qty', 'Cost', 'Total', 'Days']],
-        body: list.map((b, i) => [(i + 1).toString(), b.name, b.batch || '—', b.expiry, b.qty.toString(), b.cost.toFixed(2), (b.qty * b.cost).toFixed(2), b.days < 0 ? `Exp ${Math.abs(b.days)}d` : `${b.days}d`]),
-        theme: 'striped',
-        headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 9 },
-        bodyStyles: { fontSize: 8 },
-        styles: { halign: 'center' },
-        columnStyles: { 1: { halign: 'left', cellWidth: 50 } }
-      });
-
+      doc.autoTable({ startY: 42, head: [['#', 'Medicine', 'SKU', 'Batch', 'Expiry', 'Qty', 'Cost', 'Total', 'Days']], body: list.map((b, i) => [(i + 1).toString(), b.name, b.sku || '—', b.batch || '—', b.expiry, b.qty.toString(), b.cost.toFixed(2), (b.qty * b.cost).toFixed(2), b.days < 0 ? `Exp ${Math.abs(b.days)}d` : `${b.days}d`]), theme: 'striped', headStyles: { fillColor: [13, 148, 136], textColor: 255, fontSize: 8 }, bodyStyles: { fontSize: 7 }, styles: { halign: 'center' }, columnStyles: { 1: { halign: 'left', cellWidth: 40 } } });
       doc.save(`salahiya-supplier-${Date.now()}.pdf`);
       showToast('✅ تم تحميل التقرير!', 'success');
     }
-  } catch (err) {
-    console.error('PDF error:', err);
-    showToast('❌ حدث خطأ في إنشاء PDF', 'error');
-  }
+  } catch (err) { console.error('PDF error:', err); showToast('❌ حدث خطأ', 'error'); }
 }
 
-// ============================================================
-// Analytics
-// ============================================================
 function renderAnalytics() {
   if (!batchesCache.length && !branchesCache.length) return;
-
   const activeBatches = batchesCache.filter(b => b.qty > 0);
   const now = new Date();
-
   const total = activeBatches.length;
-  const totalValue = activeBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
+  const totalValue = activeBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
   const riskBatches = activeBatches.filter(b => daysUntilExpiry(b.expiry) <= 90);
-  const riskValue = riskBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-
+  const riskValue = riskBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0);
+  const expectedProfit = activeBatches.reduce((s, b) => { const sp = parseFloat(b.sell_price) || (parseFloat(b.cost) || 0) * 1.2; return s + (sp - (parseFloat(b.cost) || 0)) * b.qty; }, 0);
   document.getElementById('kpi-total').textContent = fmtNum(total);
   document.getElementById('kpi-total-sub').textContent = `${branchesCache.length} فرع`;
   document.getElementById('kpi-value').textContent = fmtMoney(totalValue);
   document.getElementById('kpi-value-sub').textContent = 'إجمالي قيمة المخزون';
   document.getElementById('kpi-risk').textContent = fmtMoney(riskValue);
   document.getElementById('kpi-risk-sub').textContent = `${riskBatches.length} دواء معرّض`;
-
+  document.getElementById('kpi-profit').textContent = fmtMoney(expectedProfit);
+  document.getElementById('kpi-profit-sub').textContent = 'الربح المتوقع';
   const expired = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
   const safe = total - riskBatches.length;
   const rescueRate = total > 0 ? Math.round((safe / total) * 100) : 0;
-  document.getElementById('kpi-rescue').textContent = rescueRate + '%';
-  document.getElementById('kpi-rescue-sub').textContent = `${safe} دواء سليم`;
-
   const safeRatio = total > 0 ? safe / total : 1;
   const expiredRatio = total > 0 ? expired / total : 0;
   const criticalRatio = total > 0 ? activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; }).length / total : 0;
   const healthScore = Math.round((safeRatio * 40) + ((1 - expiredRatio) * 30) + ((1 - criticalRatio) * 30));
-
   const healthArc = document.getElementById('health-arc');
   const circumference = 2 * Math.PI * 70;
-  const offset = circumference - (healthScore / 100) * circumference;
-  healthArc.style.strokeDashoffset = offset;
-
+  healthArc.style.strokeDashoffset = circumference - (healthScore / 100) * circumference;
   let healthColor, healthLabel, healthDesc;
   if (healthScore >= 80) { healthColor = '#22c55e'; healthLabel = 'ممتاز 🎉'; healthDesc = 'مخزونك في حالة رائعة'; }
   else if (healthScore >= 60) { healthColor = '#84cc16'; healthLabel = 'جيد 👍'; healthDesc = 'مخزونك في حالة جيدة'; }
   else if (healthScore >= 40) { healthColor = '#eab308'; healthLabel = 'متوسط ⚠️'; healthDesc = 'يحتاج بعض التحسين'; }
   else if (healthScore >= 20) { healthColor = '#f97316'; healthLabel = 'ضعيف 😟'; healthDesc = 'يحتاج تحسين عاجل'; }
   else { healthColor = '#ef4444'; healthLabel = 'خطر 🚨'; healthDesc = 'حالة حرجة!'; }
-
   healthArc.style.stroke = healthColor;
   document.getElementById('health-score').textContent = healthScore;
   document.getElementById('health-score').style.color = healthColor;
   document.getElementById('health-label').textContent = healthLabel;
   document.getElementById('health-label').style.color = healthColor;
   document.getElementById('health-desc').textContent = healthDesc;
-
   const isDark = document.body.classList.contains('dark');
   const gridColor = isDark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)';
   const textColor = isDark ? '#cbd5e1' : '#475569';
-
   const expiredC = activeBatches.filter(b => daysUntilExpiry(b.expiry) < 0).length;
   const criticalC = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d >= 0 && d <= 30; }).length;
   const warningC = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d > 30 && d <= 60; }).length;
   const watchC = activeBatches.filter(b => { const d = daysUntilExpiry(b.expiry); return d > 60 && d <= 90; }).length;
   const safeC = activeBatches.filter(b => daysUntilExpiry(b.expiry) > 90).length;
-
   if (chartDistribution) chartDistribution.destroy();
   const ctxDist = document.getElementById('chart-distribution').getContext('2d');
-  chartDistribution = new Chart(ctxDist, {
-    type: 'doughnut',
-    data: { labels: ['منتهي', 'خطر', 'تحذير', 'مراقبة', 'سليم'], datasets: [{ data: [expiredC, criticalC, warningC, watchC, safeC], backgroundColor: ['#b91c1c', '#ef4444', '#f97316', '#eab308', '#22c55e'], borderWidth: 2, borderColor: isDark ? '#0f172a' : '#ffffff' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Cairo', size: 12 }, padding: 12, usePointStyle: true } }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true } }, cutout: '65%' }
-  });
-
+  chartDistribution = new Chart(ctxDist, { type: 'doughnut', data: { labels: ['منتهي', 'خطر', 'تحذير', 'مراقبة', 'سليم'], datasets: [{ data: [expiredC, criticalC, warningC, watchC, safeC], backgroundColor: ['#b91c1c', '#ef4444', '#f97316', '#eab308', '#22c55e'], borderWidth: 2, borderColor: isDark ? '#0f172a' : '#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Cairo', size: 12 }, padding: 12, usePointStyle: true } }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true } }, cutout: '65%' } });
   const months = [], monthLabels = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(d);
-    monthLabels.push(d.toLocaleDateString('ar-EG', { month: 'long' }));
-  }
-  const rescuedData = months.map(m => {
-    const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0);
-    return activeBatches.filter(b => { const exp = new Date(b.expiry); const created = new Date(b.created_at); return created < monthEnd && exp > monthEnd; }).length;
-  });
-
+  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d); monthLabels.push(d.toLocaleDateString('ar-EG', { month: 'long' })); }
+  const rescuedData = months.map(m => { const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0); return activeBatches.filter(b => { const exp = new Date(b.expiry); const created = new Date(b.created_at); return created < monthEnd && exp > monthEnd; }).length; });
   if (chartTrend) chartTrend.destroy();
   const ctxTrend = document.getElementById('chart-trend').getContext('2d');
   const gradient = ctxTrend.createLinearGradient(0, 0, 0, 280);
   gradient.addColorStop(0, 'rgba(13, 148, 136, 0.4)');
   gradient.addColorStop(1, 'rgba(13, 148, 136, 0.0)');
-  chartTrend = new Chart(ctxTrend, {
-    type: 'line',
-    data: { labels: monthLabels, datasets: [{ label: 'أدوية محمية', data: rescuedData, borderColor: '#0d9488', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#0d9488', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 }, stepSize: 1 } } } }
-  });
-
+  chartTrend = new Chart(ctxTrend, { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'أدوية محمية', data: rescuedData, borderColor: '#0d9488', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#0d9488', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 12 }, stepSize: 1 } } } } });
   const supplierMap = {};
-  activeBatches.forEach(b => {
-    const s = b.supplier || 'غير محدد';
-    if (!supplierMap[s]) supplierMap[s] = { count: 0, value: 0 };
-    supplierMap[s].count++;
-    supplierMap[s].value += b.qty * Number(b.cost);
-  });
+  activeBatches.forEach(b => { const s = b.supplier || 'غير محدد'; if (!supplierMap[s]) supplierMap[s] = { count: 0, value: 0 }; supplierMap[s].count++; supplierMap[s].value += b.qty * (parseFloat(b.cost) || 0); });
   const topSuppliers = Object.entries(supplierMap).sort((a, b) => b[1].value - a[1].value).slice(0, 5);
-
   if (chartSuppliers) chartSuppliers.destroy();
   const ctxSup = document.getElementById('chart-suppliers').getContext('2d');
-  chartSuppliers = new Chart(ctxSup, {
-    type: 'bar',
-    data: { labels: topSuppliers.map(s => s[0].length > 15 ? s[0].substring(0, 15) + '...' : s[0]), datasets: [{ label: 'القيمة (ج.م)', data: topSuppliers.map(s => s[1].value), backgroundColor: ['#0d9488', '#14b8a6', '#06b6d4', '#22d3ee', '#5eead4'], borderRadius: 8, borderSkipped: false }] },
-    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } } }
-  });
-
-  // Categories Chart
+  chartSuppliers = new Chart(ctxSup, { type: 'bar', data: { labels: topSuppliers.map(s => s[0].length > 15 ? s[0].substring(0, 15) + '...' : s[0]), datasets: [{ label: 'القيمة', data: topSuppliers.map(s => s[1].value), backgroundColor: ['#0d9488', '#14b8a6', '#06b6d4', '#22d3ee', '#5eead4'], borderRadius: 8, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } } } });
   const categoryMap = {};
-  activeBatches.forEach(b => {
-    const c = b.category || 'غير مصنّف';
-    if (!categoryMap[c]) categoryMap[c] = 0;
-    categoryMap[c] += b.qty * Number(b.cost);
-  });
+  activeBatches.forEach(b => { const c = b.category || 'غير مصنّف'; if (!categoryMap[c]) categoryMap[c] = 0; categoryMap[c] += b.qty * (parseFloat(b.cost) || 0); });
   const topCategories = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
   if (chartCategories) chartCategories.destroy();
   const ctxCat = document.getElementById('chart-categories').getContext('2d');
-  chartCategories = new Chart(ctxCat, {
-    type: 'bar',
-    data: {
-      labels: topCategories.map(c => c[0]),
-      datasets: [{ label: 'القيمة (ج.م)', data: topCategories.map(c => c[1]), backgroundColor: topCategories.map(c => getCategoryColor(c[0]) || '#0d9488'), borderRadius: 8, borderSkipped: false }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } },
-      scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } }
-    }
-  });
-
-  const topRisk = riskBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), value: b.qty * Number(b.cost) })).sort((a, b) => b.value - a.value).slice(0, 5);
+  chartCategories = new Chart(ctxCat, { type: 'bar', data: { labels: topCategories.map(c => c[0]), datasets: [{ label: 'القيمة', data: topCategories.map(c => c[1]), backgroundColor: topCategories.map(c => getCategoryColor(c[0]) || '#0d9488'), borderRadius: 8, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } } } });
+  const groupMap = {};
+  activeBatches.forEach(b => { const g = b.group_name || 'غير محددة'; if (g === 'غير محددة') return; if (!groupMap[g]) groupMap[g] = 0; groupMap[g] += b.qty * (parseFloat(b.cost) || 0); });
+  const topGroups = Object.entries(groupMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (chartGroups) chartGroups.destroy();
+  const ctxGroup = document.getElementById('chart-groups').getContext('2d');
+  chartGroups = new Chart(ctxGroup, { type: 'bar', data: { labels: topGroups.map(g => g[0]), datasets: [{ label: 'القيمة', data: topGroups.map(g => g[1]), backgroundColor: topGroups.map(g => getGroupColor(g[0]) || '#3b82f6'), borderRadius: 8, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' }, rtl: true, backgroundColor: 'rgba(15,23,42,0.9)', padding: 12, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Cairo', size: 11 } } } } } });
+  const topRisk = riskBatches.map(b => ({ ...b, days: daysUntilExpiry(b.expiry), value: b.qty * (parseFloat(b.cost) || 0) })).sort((a, b) => b.value - a.value).slice(0, 5);
   const riskList = document.getElementById('top-risk-list');
-  if (!topRisk.length) {
-    riskList.innerHTML = '<p class="text-slate-500 text-center py-8">✅ لا توجد أدوية معرّضة للخطر</p>';
-  } else {
-    riskList.innerHTML = topRisk.map((b, i) => {
-      const daysText = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `${b.days} يوم`;
-      return `<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-r-4" style="border-color: ${b.days < 0 ? '#b91c1c' : b.days <= 30 ? '#ef4444' : b.days <= 60 ? '#f97316' : '#eab308'};">
-        <div class="text-2xl font-black text-slate-400">#${i + 1}</div>
-        <div class="flex-1 min-w-0">
-          <div class="font-bold truncate">${esc(b.name)}</div>
-          <div class="text-xs text-slate-500">${esc(b.batch)} | ${b.qty} علبة</div>
-        </div>
-        <div class="text-left">
-          <div class="font-black text-sm" style="color: ${b.days < 0 ? '#b91c1c' : b.days <= 30 ? '#ef4444' : '#f97316'};">${fmtMoney(b.value)} ج.م</div>
-          <div class="text-xs text-slate-500">${daysText}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  if (branchesCache.length > 1) {
-    document.getElementById('branch-analytics-container').classList.remove('hidden');
-    const tb = document.getElementById('branch-analytics-body');
-    tb.innerHTML = branchesCache.map(br => {
-      const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0);
-      const count = brBatches.length;
-      const value = brBatches.reduce((s, b) => s + b.qty * Number(b.cost), 0);
-      const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length;
-      const safeRatio = count > 0 ? (count - risk) / count : 1;
-      const branchHealth = Math.round(safeRatio * 100);
-      const healthColor = branchHealth >= 80 ? 'text-green-500' : branchHealth >= 60 ? 'text-lime-500' : branchHealth >= 40 ? 'text-yellow-500' : 'text-red-500';
-      return `<tr class="border-b">
-        <td class="p-3 font-bold">${esc(br.name)} ${br.is_main ? '⭐' : ''}</td>
-        <td class="p-3 text-center">${count}</td>
-        <td class="p-3 text-center">${fmtMoney(value)} ج.م</td>
-        <td class="p-3 text-center text-red-500 font-bold">${risk}</td>
-        <td class="p-3 text-center ${healthColor} font-black">${branchHealth}%</td>
-      </tr>`;
-    }).join('');
-  } else {
-    document.getElementById('branch-analytics-container').classList.add('hidden');
-  }
-
+  if (!topRisk.length) { riskList.innerHTML = '<p class="text-slate-500 text-center py-8">✅ لا توجد أدوية معرّضة للخطر</p>'; }
+  else { riskList.innerHTML = topRisk.map((b, i) => { const daysText = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `${b.days} يوم`; return `<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-r-4" style="border-color: ${b.days < 0 ? '#b91c1c' : b.days <= 30 ? '#ef4444' : b.days <= 60 ? '#f97316' : '#eab308'};"><div class="text-2xl font-black text-slate-400">#${i + 1}</div><div class="flex-1 min-w-0"><div class="font-bold truncate">${esc(b.name)}</div><div class="text-xs text-slate-500">${esc(b.batch)} | ${b.qty} ${esc(b.unit || 'قطعة')}</div></div><div class="text-left"><div class="font-black text-sm" style="color: ${b.days < 0 ? '#b91c1c' : b.days <= 30 ? '#ef4444' : '#f97316'};">${fmtMoney(b.value)} ج.م</div><div class="text-xs text-slate-500">${daysText}</div></div></div>`; }).join(''); }
+  const lowStockBatches = activeBatches.filter(b => isLowStock(b));
+  const lowStockEl = document.getElementById('low-stock-analytics');
+  if (lowStockBatches.length > 0) { lowStockEl.classList.remove('hidden'); document.getElementById('low-stock-list').innerHTML = lowStockBatches.map(b => `<div class="flex items-center gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border-r-4 border-red-500 mb-2"><div class="text-2xl">📉</div><div class="flex-1 min-w-0"><div class="font-bold">${esc(b.name)}</div><div class="text-xs text-slate-500">${b.sku ? `SKU: ${esc(b.sku)} | ` : ''}${esc(b.batch)} | ${esc(getBranchName(b.branch_id))}</div></div><div class="text-left"><div class="font-black text-sm text-red-500">${b.qty} / ${b.min_stock}</div><div class="text-xs text-slate-500">ناقص ${b.min_stock - b.qty}</div></div></div>`).join(''); }
+  else { lowStockEl.classList.add('hidden'); }
+  if (branchesCache.length > 1) { document.getElementById('branch-analytics-container').classList.remove('hidden'); const tb = document.getElementById('branch-analytics-body'); tb.innerHTML = branchesCache.map(br => { const brBatches = batchesCache.filter(b => b.branch_id === br.id && b.qty > 0); const count = brBatches.length; const value = brBatches.reduce((s, b) => s + b.qty * (parseFloat(b.cost) || 0), 0); const risk = brBatches.filter(b => daysUntilExpiry(b.expiry) <= 90).length; const safeRatio = count > 0 ? (count - risk) / count : 1; const branchHealth = Math.round(safeRatio * 100); const healthColor = branchHealth >= 80 ? 'text-green-500' : branchHealth >= 60 ? 'text-lime-500' : branchHealth >= 40 ? 'text-yellow-500' : 'text-red-500'; return `<tr class="border-b"><td class="p-3 font-bold">${esc(br.name)} ${br.is_main ? '⭐' : ''}</td><td class="p-3 text-center">${count}</td><td class="p-3 text-center">${fmtMoney(value)} ج.م</td><td class="p-3 text-center text-red-500 font-bold">${risk}</td><td class="p-3 text-center ${healthColor} font-black">${branchHealth}%</td></tr>`; }).join(''); }
+  else { document.getElementById('branch-analytics-container').classList.add('hidden'); }
   document.getElementById('analytics-updated').textContent = new Date().toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ============================================================
-// Tabs
-// ============================================================
 function showTab(name) {
-  ['dashboard','analytics','inventory','search','add','import','categories','branches','report','settings'].forEach(t => {
-    const el = document.getElementById('view-'+t);
-    if (el) el.classList.add('hidden');
-    const tab = document.getElementById('tab-'+t);
-    if (tab) { tab.classList.remove('tab-active'); tab.classList.add('hover:bg-slate-100', 'dark:hover:bg-slate-800'); }
-  });
+  ['dashboard','analytics','inventory','search','movements','add','import','categories','groups','branches','report','settings'].forEach(t => { const el = document.getElementById('view-'+t); if (el) el.classList.add('hidden'); const tab = document.getElementById('tab-'+t); if (tab) { tab.classList.remove('tab-active'); tab.classList.add('hover:bg-slate-100', 'dark:hover:bg-slate-800'); } });
   const activeTab = document.getElementById('tab-'+name);
   if (activeTab) { activeTab.classList.add('tab-active'); activeTab.classList.remove('hover:bg-slate-100', 'dark:hover:bg-slate-800'); }
   const view = document.getElementById('view-'+name);
@@ -2090,6 +1904,8 @@ function showTab(name) {
   if (name === 'analytics') setTimeout(renderAnalytics, 100);
   if (name === 'search') setTimeout(renderAdvancedSearch, 100);
   if (name === 'categories') renderCategoriesUI();
+  if (name === 'groups') renderGroupsUI();
+  if (name === 'movements') loadMovements();
   if (notifPanelOpen) toggleNotifPanel();
 }
 
@@ -2103,50 +1919,22 @@ async function loadSettingsIntoForm() {
   updateLogoUI(currentPharmacy.logo_url || '');
 }
 
-function updateLogoUI(url) {
-  const img = document.getElementById('s-logo-preview');
-  const btn = document.getElementById('s-logo-remove');
-  if (url) { img.src = url; img.classList.remove('hidden'); btn.classList.remove('hidden'); }
-  else { img.src = ''; img.classList.add('hidden'); btn.classList.add('hidden'); }
-}
+function updateLogoUI(url) { const img = document.getElementById('s-logo-preview'); const btn = document.getElementById('s-logo-remove'); if (url) { img.src = url; img.classList.remove('hidden'); btn.classList.remove('hidden'); } else { img.src = ''; img.classList.add('hidden'); btn.classList.add('hidden'); } }
 
 let tempLogoFile = null;
-document.getElementById('s-logo-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 1024 * 1024) { showToast('⚠️ حجم الصورة كبير.', 'warning'); return; }
-  tempLogoFile = file;
-  const reader = new FileReader();
-  reader.onload = ev => updateLogoUI(ev.target.result);
-  reader.readAsDataURL(file);
-});
+document.getElementById('s-logo-input').addEventListener('change', e => { const file = e.target.files[0]; if (!file) return; if (file.size > 1024 * 1024) { showToast('⚠️ حجم الصورة كبير.', 'warning'); return; } tempLogoFile = file; const reader = new FileReader(); reader.onload = ev => updateLogoUI(ev.target.result); reader.readAsDataURL(file); });
 
 function removeLogo() { tempLogoFile = null; document.getElementById('s-logo-input').value = ''; updateLogoUI(''); }
 
-async function uploadLogoIfNeeded() {
-  if (!tempLogoFile) return currentPharmacy.logo_url || '';
-  const ext = tempLogoFile.name.split('.').pop();
-  const path = `${currentUser.id}/logo-${Date.now()}.${ext}`;
-  const { error: upErr } = await supabaseClient.storage.from('logos').upload(path, tempLogoFile, { upsert: true });
-  if (upErr) { showToast('❌ فشل الرفع: ' + upErr.message, 'error'); return currentPharmacy.logo_url || ''; }
-  const { data } = supabaseClient.storage.from('logos').getPublicUrl(path);
-  return data.publicUrl;
-}
+async function uploadLogoIfNeeded() { if (!tempLogoFile) return currentPharmacy.logo_url || ''; const ext = tempLogoFile.name.split('.').pop(); const path = `${currentUser.id}/logo-${Date.now()}.${ext}`; const { error: upErr } = await supabaseClient.storage.from('logos').upload(path, tempLogoFile, { upsert: true }); if (upErr) { showToast('❌ فشل الرفع', 'error'); return currentPharmacy.logo_url || ''; } const { data } = supabaseClient.storage.from('logos').getPublicUrl(path); return data.publicUrl; }
 
 async function saveSettings() {
   const btn = document.getElementById('save-settings-btn');
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   const logoUrl = await uploadLogoIfNeeded();
-  const updates = {
-    name: document.getElementById('s-name').value.trim() || 'صيدليتي',
-    phone: document.getElementById('s-phone').value.trim(),
-    license: document.getElementById('s-license').value.trim(),
-    address: document.getElementById('s-address').value.trim(),
-    logo_url: logoUrl,
-    updated_at: new Date().toISOString()
-  };
+  const updates = { name: document.getElementById('s-name').value.trim() || 'صيدليتي', phone: document.getElementById('s-phone').value.trim(), license: document.getElementById('s-license').value.trim(), address: document.getElementById('s-address').value.trim(), logo_url: logoUrl, updated_at: new Date().toISOString() };
   const { error } = await supabaseClient.from('pharmacies').update(updates).eq('user_id', currentUser.id);
-  if (error) { showToast('❌ خطأ: ' + error.message, 'error'); btn.disabled = false; btn.textContent = '💾 حفظ الإعدادات'; return; }
+  if (error) { showToast('❌ خطأ', 'error'); btn.disabled = false; btn.textContent = '💾 حفظ الإعدادات'; return; }
   currentPharmacy = { ...currentPharmacy, ...updates };
   tempLogoFile = null;
   applyPharmacyToUI();
@@ -2164,15 +1952,7 @@ function applyPharmacyToUI() {
   document.getElementById('header-subtitle').textContent = sub;
 }
 
-// ============================================================
-// Report
-// ============================================================
-function refreshSuppliers() {
-  const sups = [...new Set(getFilteredBatches().map(b => b.supplier).filter(Boolean))];
-  const cur = document.getElementById('p-supplier').value;
-  document.getElementById('p-supplier').innerHTML = '<option value="">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
-  buildReport();
-}
+function refreshSuppliers() { const sups = [...new Set(getFilteredBatches().map(b => b.supplier).filter(Boolean))]; const cur = document.getElementById('p-supplier').value; document.getElementById('p-supplier').innerHTML = '<option value="">كل الموردين</option>' + sups.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join(''); buildReport(); }
 
 function buildReport() {
   const range = parseInt(document.getElementById('p-range').value);
@@ -2182,7 +1962,7 @@ function buildReport() {
   const pharmacy = settings.name || 'صيدلية';
   let source = batchesCache;
   if (pBranch !== 'all') source = source.filter(b => b.branch_id === pBranch);
-  let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: Number(b.cost) }));
+  let list = source.filter(b => b.qty > 0).map(b => ({ ...b, days: daysUntilExpiry(b.expiry), cost: parseFloat(b.cost) || 0 }));
   list = list.filter(b => b.days <= range);
   if (sup) list = list.filter(b => b.supplier === sup);
   list.sort((a,b) => a.days - b.days);
@@ -2197,72 +1977,20 @@ function buildReport() {
   const logoHtml = settings.logo_url ? `<img src="${settings.logo_url}" style="width:80px; height:80px; object-fit:contain; border-radius:12px;">` : '';
   const contactLine = [settings.phone ? '📞 ' + settings.phone : '', settings.address, settings.license ? 'ترخيص: ' + settings.license : ''].filter(Boolean).join(' • ');
   const showBranchCol = branchesCache.length > 1;
-  let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:3px solid #0d9488; margin-bottom:20px;">
-      ${logoHtml ? `<div style="margin-bottom:10px;">${logoHtml}</div>` : ''}
-      <h1 style="font-size:26px; font-weight:900; color:#0d9488; margin:0;">${esc(pharmacy)}</h1>
-      ${contactLine ? `<p style="font-size:12px; color:#555; margin:6px 0 0 0;">${esc(contactLine)}</p>` : ''}
-      <h2 style="font-size:18px; font-weight:700; margin:10px 0 0 0; color:#333;">تقرير الأدوية المرتجعة للمورد</h2>
-      ${showBranchCol ? `<p style="font-size:13px; color:#0d9488; margin:6px 0 0 0; font-weight:bold;">الفرع: ${esc(branchLabel)}</p>` : ''}
-    </div>
-    <div style="background:#f0fdfa; padding:12px; border-radius:8px; margin-bottom:15px; font-size:13px;">
-      <strong>ملخص:</strong> الفترة: <strong>${rangeLabel}</strong> | المورد: <strong>${esc(supLabel)}</strong> | عدد الأصناف: <strong>${list.length}</strong> | الكميات: <strong>${totalQty}</strong> | القيمة: <strong>${totalVal.toFixed(2)} ج.م</strong>
-    </div>
-    <table style="width:100%; border-collapse:collapse; font-size:11px;">
-      <thead><tr style="background:#0d9488; color:white;">
-        <th style="padding:6px; border:1px solid #ccc;">م</th>
-        <th style="padding:6px; text-align:right; border:1px solid #ccc;">اسم الدواء</th>
-        ${showBranchCol ? '<th style="padding:6px; border:1px solid #ccc;">الفرع</th>' : ''}
-        <th style="padding:6px; border:1px solid #ccc;">التشغيلة</th>
-        <th style="padding:6px; border:1px solid #ccc;">الانتهاء</th>
-        <th style="padding:6px; border:1px solid #ccc;">الكمية</th>
-        <th style="padding:6px; border:1px solid #ccc;">التكلفة</th>
-        <th style="padding:6px; border:1px solid #ccc;">الإجمالي</th>
-        <th style="padding:6px; border:1px solid #ccc;">الأيام</th>
-      </tr></thead><tbody>`;
-  list.forEach((b, i) => {
-    const daysText = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `${b.days} يوم`;
-    const rowColor = b.days <= 30 ? '#fee2e2' : b.days <= 60 ? '#ffedd5' : '#fef3c7';
-    html += `<tr style="background:${rowColor};">
-      <td style="padding:5px; text-align:center; border:1px solid #ccc;">${i+1}</td>
-      <td style="padding:5px; text-align:right; border:1px solid #ccc; font-weight:bold;">${esc(b.name)}</td>
-      ${showBranchCol ? `<td style="padding:5px; text-align:center; border:1px solid #ccc; font-size:10px;">${esc(getBranchName(b.branch_id))}</td>` : ''}
-      <td style="padding:5px; text-align:center; border:1px solid #ccc;">${esc(b.batch)}</td>
-      <td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.expiry}</td>
-      <td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.qty}</td>
-      <td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.cost.toFixed(2)}</td>
-      <td style="padding:5px; text-align:center; border:1px solid #ccc; font-weight:bold;">${(b.qty*b.cost).toFixed(2)}</td>
-      <td style="padding:5px; text-align:center; border:1px solid #ccc; font-size:10px;">${daysText}</td>
-    </tr>`;
-  });
-  html += `</tbody></table>
-    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:13px;">
-      <div style="text-align:center; width:45%;"><div style="border-top:1px solid #333; padding-top:6px;">توقيع الصيدلي</div></div>
-      <div style="text-align:center; width:45%;"><div style="border-top:1px solid #333; padding-top:6px;">توقيع المندوب</div></div>
-    </div>
-    <div style="margin-top:30px; text-align:center; font-size:10px; color:#999;">تم إعداد التقرير بتاريخ ${today} — ${esc(pharmacy)}</div>`;
+  let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:3px solid #0d9488; margin-bottom:20px;">${logoHtml ? `<div style="margin-bottom:10px;">${logoHtml}</div>` : ''}<h1 style="font-size:26px; font-weight:900; color:#0d9488; margin:0;">${esc(pharmacy)}</h1>${contactLine ? `<p style="font-size:12px; color:#555; margin:6px 0 0 0;">${esc(contactLine)}</p>` : ''}<h2 style="font-size:18px; font-weight:700; margin:10px 0 0 0; color:#333;">تقرير الأدوية المرتجعة للمورد</h2>${showBranchCol ? `<p style="font-size:13px; color:#0d9488; margin:6px 0 0 0; font-weight:bold;">الفرع: ${esc(branchLabel)}</p>` : ''}</div><div style="background:#f0fdfa; padding:12px; border-radius:8px; margin-bottom:15px; font-size:13px;"><strong>ملخص:</strong> الفترة: <strong>${rangeLabel}</strong> | المورد: <strong>${esc(supLabel)}</strong> | عدد الأصناف: <strong>${list.length}</strong> | الكميات: <strong>${totalQty}</strong> | القيمة: <strong>${totalVal.toFixed(2)} ج.م</strong></div><table style="width:100%; border-collapse:collapse; font-size:11px;"><thead><tr style="background:#0d9488; color:white;"><th style="padding:6px; border:1px solid #ccc;">م</th><th style="padding:6px; text-align:right; border:1px solid #ccc;">اسم الدواء</th><th style="padding:6px; border:1px solid #ccc;">SKU</th>${showBranchCol ? '<th style="padding:6px; border:1px solid #ccc;">الفرع</th>' : ''}<th style="padding:6px; border:1px solid #ccc;">التشغيلة</th><th style="padding:6px; border:1px solid #ccc;">الانتهاء</th><th style="padding:6px; border:1px solid #ccc;">الكمية</th><th style="padding:6px; border:1px solid #ccc;">التكلفة</th><th style="padding:6px; border:1px solid #ccc;">الإجمالي</th><th style="padding:6px; border:1px solid #ccc;">الأيام</th></tr></thead><tbody>`;
+  list.forEach((b, i) => { const daysText = b.days < 0 ? `منتهي منذ ${Math.abs(b.days)} يوم` : `${b.days} يوم`; const rowColor = b.days <= 30 ? '#fee2e2' : b.days <= 60 ? '#ffedd5' : '#fef3c7'; html += `<tr style="background:${rowColor};"><td style="padding:5px; text-align:center; border:1px solid #ccc;">${i+1}</td><td style="padding:5px; text-align:right; border:1px solid #ccc; font-weight:bold;">${esc(b.name)}</td><td style="padding:5px; text-align:center; border:1px solid #ccc; font-size:10px;">${esc(b.sku || '—')}</td>${showBranchCol ? `<td style="padding:5px; text-align:center; border:1px solid #ccc; font-size:10px;">${esc(getBranchName(b.branch_id))}</td>` : ''}<td style="padding:5px; text-align:center; border:1px solid #ccc;">${esc(b.batch)}</td><td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.expiry}</td><td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.qty}</td><td style="padding:5px; text-align:center; border:1px solid #ccc;">${b.cost.toFixed(2)}</td><td style="padding:5px; text-align:center; border:1px solid #ccc; font-weight:bold;">${(b.qty*b.cost).toFixed(2)}</td><td style="padding:5px; text-align:center; border:1px solid #ccc; font-size:10px;">${daysText}</td></tr>`; });
+  html += `</tbody></table><div style="margin-top:40px; display:flex; justify-content:space-between; font-size:13px;"><div style="text-align:center; width:45%;"><div style="border-top:1px solid #333; padding-top:6px;">توقيع الصيدلي</div></div><div style="text-align:center; width:45%;"><div style="border-top:1px solid #333; padding-top:6px;">توقيع المندوب</div></div></div><div style="margin-top:30px; text-align:center; font-size:10px; color:#999;">تم إعداد التقرير بتاريخ ${today} — ${esc(pharmacy)}</div>`;
   preview.innerHTML = html;
 }
+
 function doPrint() { try { window.print(); } catch (e) { showToast('اضغط Ctrl + P', 'info'); } }
 
-// ============================================================
-// Import
-// ============================================================
 let parsedRows = [], parsedHeaders = [], columnMapping = {};
 let previewData = [], importErrors = [];
 
-const FIELD_SYNONYMS = {
-  name: ['اسم الدواء','اسم الصنف','الصنف','الدواء','المنتج','name','item','product','medicine','drug'],
-  batch: ['رقم التشغيلة','التشغيلة','batch','batch no','lot'],
-  expiry: ['تاريخ الانتهاء','الانتهاء','الصلاحية','expiry','expiry date','exp'],
-  qty: ['الكمية','الرصيد','quantity','qty','stock'],
-  cost: ['سعر التكلفة','التكلفة','سعر الشراء','cost','price'],
-  supplier: ['المورد','الشركة','الموزع','supplier','vendor','company'],
-  category: ['التصنيف','الفئة','النوع','category','type','class']
-};
+const FIELD_SYNONYMS = { name: ['اسم الدواء','اسم الصنف','الصنف','الدواء','المنتج','name','item','product','medicine','drug'], sku: ['sku','كود','كود المنتج','رمز','code'], barcode: ['barcode','باركود','الباركود'], batch: ['رقم التشغيلة','التشغيلة','batch','batch no','lot'], expiry: ['تاريخ الانتهاء','الانتهاء','الصلاحية','expiry','expiry date','exp'], qty: ['الكمية','الرصيد','quantity','qty','stock'], min_stock: ['الحد الأدنى','أدنى','min','minimum'], cost: ['سعر التكلفة','التكلفة','سعر الشراء','cost','price'], sell_price: ['سعر البيع','البيع','sell','selling price'], supplier: ['المورد','الشركة','الموزع','supplier','vendor','company'], category: ['التصنيف','الفئة','النوع','category','type','class'], group_name: ['المجموعة','المجموعه','group','collection'], unit: ['الوحدة','وحدة','unit','measure'] };
 
-function normalizeHeader(h) {
-  return String(h || '').trim().toLowerCase().replace(/[\u064B-\u0652]/g, '').replace(/[إأآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[^\w\u0600-\u06FF\s]/g, ' ').replace(/\s+/g, ' ').trim();
-}
+function normalizeHeader(h) { return String(h || '').trim().toLowerCase().replace(/[\u064B-\u0652]/g, '').replace(/[إأآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[^\w\u0600-\u06FF\s]/g, ' ').replace(/\s+/g, ' ').trim(); }
 
 function autoDetect(headers) {
   const m = {};
@@ -2278,10 +2006,7 @@ function autoDetect(headers) {
 
 function parseExpiryDate(raw) {
   if (raw == null || raw === '') return null;
-  if (typeof raw === 'number') {
-    const d = XLSX.SSF ? XLSX.SSF.parse_date_code(raw) : null;
-    if (d) { const last = new Date(d.y, d.m, 0).getDate(); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d > 1 ? d.d : last).padStart(2,'0')}`; }
-  }
+  if (typeof raw === 'number') { const d = XLSX.SSF ? XLSX.SSF.parse_date_code(raw) : null; if (d) { const last = new Date(d.y, d.m, 0).getDate(); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d > 1 ? d.d : last).padStart(2,'0')}`; } }
   let s = String(raw).trim();
   if (!s) return null;
   s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).split(' ')[0].split('T')[0];
@@ -2298,24 +2023,12 @@ function parseExpiryDate(raw) {
   return null;
 }
 
-function parseNumber(raw) {
-  if (raw == null || raw === '') return null;
-  if (typeof raw === 'number') return raw;
-  let s = String(raw).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[,\sج.م$£€]/g, '');
-  const n = parseFloat(s);
-  return isNaN(n) ? null : n;
-}
+function parseNumber(raw) { if (raw == null || raw === '') return null; if (typeof raw === 'number') return raw; let s = String(raw).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[,\sج.م$£€]/g, ''); const n = parseFloat(s); return isNaN(n) ? null : n; }
 
 document.addEventListener('DOMContentLoaded', () => {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
-  if (dropZone) {
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
-    fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-  }
+  if (dropZone) { dropZone.addEventListener('click', () => fileInput.click()); dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); }); dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover')); dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); }); fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); }); }
 });
 
 function handleFile(file) {
@@ -2344,22 +2057,8 @@ function handleFile(file) {
 }
 
 function renderMappingUI() {
-  const fields = [
-    { key: 'name', label: 'اسم الدواء *', required: true },
-    { key: 'category', label: 'التصنيف', required: false },
-    { key: 'batch', label: 'رقم التشغيلة', required: false },
-    { key: 'expiry', label: 'تاريخ الانتهاء *', required: true },
-    { key: 'qty', label: 'الكمية *', required: true },
-    { key: 'cost', label: 'سعر التكلفة *', required: true },
-    { key: 'supplier', label: 'المورد', required: false }
-  ];
-  document.getElementById('mapping-container').innerHTML = fields.map(f => {
-    const opts = ['<option value="">— تجاهل —</option>'].concat(parsedHeaders.map(h => `<option value="${esc(h)}"${columnMapping[f.key] === h ? ' selected' : ''}>${esc(h)}</option>`)).join('');
-    const cls = columnMapping[f.key] ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : (f.required ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700');
-    const icon = columnMapping[f.key] ? '✅' : (f.required ? '⚠️' : '');
-    return `<div class="border rounded-xl p-3 ${cls}"><label class="block text-sm font-bold mb-2">${icon} ${f.label}</label>
-      <select onchange="updateMapping('${f.key}', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm">${opts}</select></div>`;
-  }).join('');
+  const fields = [{ key: 'name', label: 'اسم الدواء *', required: true }, { key: 'sku', label: 'SKU', required: false }, { key: 'barcode', label: 'Barcode', required: false }, { key: 'category', label: 'التصنيف', required: false }, { key: 'group_name', label: 'المجموعة', required: false }, { key: 'unit', label: 'الوحدة', required: false }, { key: 'batch', label: 'رقم التشغيلة', required: false }, { key: 'expiry', label: 'تاريخ الانتهاء *', required: true }, { key: 'qty', label: 'الكمية *', required: true }, { key: 'min_stock', label: 'الحد الأدنى', required: false }, { key: 'cost', label: 'سعر التكلفة *', required: true }, { key: 'sell_price', label: 'سعر البيع', required: false }, { key: 'supplier', label: 'المورد', required: false }];
+  document.getElementById('mapping-container').innerHTML = fields.map(f => { const opts = ['<option value="">— تجاهل —</option>'].concat(parsedHeaders.map(h => `<option value="${esc(h)}"${columnMapping[f.key] === h ? ' selected' : ''}>${esc(h)}</option>`)).join(''); const cls = columnMapping[f.key] ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' : (f.required ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'); const icon = columnMapping[f.key] ? '✅' : (f.required ? '⚠️' : ''); return `<div class="border rounded-xl p-3 ${cls}"><label class="block text-sm font-bold mb-2">${icon} ${f.label}</label><select onchange="updateMapping('${f.key}', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm">${opts}</select></div>`; }).join('');
 }
 
 function updateMapping(f, v) { columnMapping[f] = v; renderMappingUI(); }
@@ -2373,23 +2072,20 @@ function processImport() {
   if (!columnMapping.cost) missing.push('سعر التكلفة');
   if (missing.length) { showToast('⚠️ يرجى مطابقة: ' + missing.join(', '), 'warning'); return; }
   previewData = []; importErrors = [];
-  const idx = { name: getHeaderIndex(columnMapping.name), category: getHeaderIndex(columnMapping.category), batch: getHeaderIndex(columnMapping.batch), expiry: getHeaderIndex(columnMapping.expiry), qty: getHeaderIndex(columnMapping.qty), cost: getHeaderIndex(columnMapping.cost), supplier: getHeaderIndex(columnMapping.supplier) };
+  const idx = { name: getHeaderIndex(columnMapping.name), sku: getHeaderIndex(columnMapping.sku), barcode: getHeaderIndex(columnMapping.barcode), category: getHeaderIndex(columnMapping.category), group_name: getHeaderIndex(columnMapping.group_name), unit: getHeaderIndex(columnMapping.unit), batch: getHeaderIndex(columnMapping.batch), expiry: getHeaderIndex(columnMapping.expiry), qty: getHeaderIndex(columnMapping.qty), min_stock: getHeaderIndex(columnMapping.min_stock), cost: getHeaderIndex(columnMapping.cost), sell_price: getHeaderIndex(columnMapping.sell_price), supplier: getHeaderIndex(columnMapping.supplier) };
   parsedRows.forEach((row, i) => {
     const rowNum = i + 2;
     const name = idx.name >= 0 ? String(row[idx.name] || '').trim() : '';
     const expiry = parseExpiryDate(idx.expiry >= 0 ? row[idx.expiry] : null);
     const qty = parseNumber(idx.qty >= 0 ? row[idx.qty] : null);
     const cost = parseNumber(idx.cost >= 0 ? row[idx.cost] : null);
-    const batch = idx.batch >= 0 ? String(row[idx.batch] || '').trim() : '';
-    const supplier = idx.supplier >= 0 ? String(row[idx.supplier] || '').trim() : 'غير محدد';
-    const category = idx.category >= 0 ? String(row[idx.category] || '').trim() : 'غير مصنّف';
     const errs = [];
     if (!name) errs.push('اسم فارغ');
     if (!expiry) errs.push('تاريخ غير صالح');
     if (qty == null || qty <= 0) errs.push('كمية غير صالحة');
     if (cost == null || cost < 0) errs.push('تكلفة غير صالحة');
     if (errs.length) { importErrors.push({ row: rowNum, name: name || '—', reason: errs.join('، ') }); return; }
-    previewData.push({ name, category: category || 'غير مصنّف', batch: batch || 'بدون تشغيلة', expiry, qty: Math.round(qty), cost, supplier: supplier || 'غير محدد', _days: daysUntilExpiry(expiry) });
+    previewData.push({ name, sku: idx.sku >= 0 ? String(row[idx.sku] || '').trim() : '', barcode: idx.barcode >= 0 ? String(row[idx.barcode] || '').trim() : '', category: idx.category >= 0 ? String(row[idx.category] || '').trim() : 'غير مصنّف', group_name: idx.group_name >= 0 ? String(row[idx.group_name] || '').trim() : 'غير محددة', unit: idx.unit >= 0 ? String(row[idx.unit] || '').trim() : 'قطعة', batch: idx.batch >= 0 ? String(row[idx.batch] || '').trim() : 'بدون تشغيلة', expiry, qty: Math.round(qty), min_stock: idx.min_stock >= 0 ? (parseNumber(row[idx.min_stock]) || 0) : 0, cost, sell_price: idx.sell_price >= 0 ? (parseNumber(row[idx.sell_price]) || 0) : 0, supplier: idx.supplier >= 0 ? String(row[idx.supplier] || '').trim() : 'غير محدد', _days: daysUntilExpiry(expiry) });
   });
   renderPreview();
   document.getElementById('import-step-2').classList.add('hidden');
@@ -2397,36 +2093,12 @@ function processImport() {
 }
 
 function renderPreview() {
-  document.getElementById('preview-body').innerHTML = previewData.slice(0, 20).map((r, i) => {
-    const s = getStatus(r._days);
-    return `<tr class="border-b">
-      <td class="p-2 text-center text-slate-500">${i+1}</td>
-      <td class="p-2 font-bold">${esc(r.name)}</td>
-      <td class="p-2 text-slate-500">${esc(r.batch)}</td>
-      <td class="p-2">${r.expiry}</td>
-      <td class="p-2 text-center">${r.qty}</td>
-      <td class="p-2 text-center">${r.cost.toFixed(2)}</td>
-      <td class="p-2 text-slate-500">${esc(r.supplier)}</td>
-      <td class="p-2 text-center"><span class="${s.color} text-xs px-2 py-1 rounded-lg">${s.label}</span></td>
-    </tr>`;
-  }).join('');
+  document.getElementById('preview-body').innerHTML = previewData.slice(0, 20).map((r, i) => { const s = getStatus(r._days); return `<tr class="border-b"><td class="p-2 text-center text-slate-500">${i+1}</td><td class="p-2 font-bold">${esc(r.name)}</td><td class="p-2 text-xs text-slate-500">${esc(r.sku || '—')}</td><td class="p-2 text-slate-500">${esc(r.batch)}</td><td class="p-2">${r.expiry}</td><td class="p-2 text-center">${r.qty}</td><td class="p-2 text-center">${r.cost.toFixed(2)}</td><td class="p-2 text-slate-500">${esc(r.supplier)}</td><td class="p-2 text-center"><span class="${s.color} text-xs px-2 py-1 rounded-lg">${s.label}</span></td></tr>`; }).join('');
   const totalVal = previewData.reduce((s, r) => s + r.qty * r.cost, 0);
   const exp30 = previewData.filter(r => r._days <= 30).length;
-  document.getElementById('import-summary').innerHTML = `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-    <div><div class="text-xs text-slate-500">صفوف صالحة</div><div class="text-xl font-black text-teal-600">${previewData.length}</div></div>
-    <div><div class="text-xs text-slate-500">أخطاء</div><div class="text-xl font-black text-red-600">${importErrors.length}</div></div>
-    <div><div class="text-xs text-slate-500">خطر (≤30)</div><div class="text-xl font-black text-orange-600">${exp30}</div></div>
-    <div><div class="text-xs text-slate-500">القيمة</div><div class="text-xl font-black text-yellow-600">${totalVal.toFixed(0)} ج.م</div></div>
-  </div>`;
+  document.getElementById('import-summary').innerHTML = `<div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div><div class="text-xs text-slate-500">صفوف صالحة</div><div class="text-xl font-black text-teal-600">${previewData.length}</div></div><div><div class="text-xs text-slate-500">أخطاء</div><div class="text-xl font-black text-red-600">${importErrors.length}</div></div><div><div class="text-xs text-slate-500">خطر (≤30)</div><div class="text-xl font-black text-orange-600">${exp30}</div></div><div><div class="text-xs text-slate-500">القيمة</div><div class="text-xl font-black text-yellow-600">${totalVal.toFixed(0)} ج.م</div></div></div>`;
   const errDiv = document.getElementById('import-errors');
-  if (importErrors.length) {
-    errDiv.classList.remove('hidden');
-    errDiv.innerHTML = `<div class="font-bold mb-2">⚠️ ${importErrors.length} صف بها أخطاء:</div>
-      <div class="max-h-40 overflow-y-auto"><table class="w-full text-xs">
-      <thead><tr class="border-b"><th class="text-right p-1">الصف</th><th class="text-right p-1">الدواء</th><th class="text-right p-1">السبب</th></tr></thead>
-      <tbody>${importErrors.slice(0, 50).map(e => `<tr class="border-b"><td class="p-1">${e.row}</td><td class="p-1">${esc(e.name)}</td><td class="p-1 text-red-600">${esc(e.reason)}</td></tr>`).join('')}</tbody>
-      </table></div>`;
-  } else errDiv.classList.add('hidden');
+  if (importErrors.length) { errDiv.classList.remove('hidden'); errDiv.innerHTML = `<div class="font-bold mb-2">⚠️ ${importErrors.length} صف بها أخطاء:</div><div class="max-h-40 overflow-y-auto"><table class="w-full text-xs"><thead><tr class="border-b"><th class="text-right p-1">الصف</th><th class="text-right p-1">الدواء</th><th class="text-right p-1">السبب</th></tr></thead><tbody>${importErrors.slice(0, 50).map(e => `<tr class="border-b"><td class="p-1">${e.row}</td><td class="p-1">${esc(e.name)}</td><td class="p-1 text-red-600">${esc(e.reason)}</td></tr>`).join('')}</tbody></table></div>`; } else errDiv.classList.add('hidden');
   document.getElementById('confirm-btn').textContent = `✅ تأكيد استيراد ${previewData.length} صف`;
 }
 
@@ -2438,7 +2110,7 @@ async function confirmImport() {
   const branchId = document.getElementById('import-branch').value;
   if (!branchId) { showToast('⚠️ اختر الفرع.', 'warning'); return; }
   if (!confirm(`سيتم إضافة ${previewData.length} دفعة. متابعة؟`)) return;
-  const rows = previewData.map(r => ({ branch_id: branchId, name: r.name, category: r.category, batch: r.batch, expiry: r.expiry, qty: r.qty, cost: r.cost, supplier: r.supplier }));
+  const rows = previewData.map(r => ({ branch_id: branchId, user_id: currentUser.id, name: r.name, sku: r.sku || null, barcode: r.barcode || null, category: r.category, group_name: r.group_name, unit: r.unit, batch: r.batch, expiry: r.expiry, qty: r.qty, min_stock: r.min_stock, cost: r.cost, sell_price: r.sell_price, reserved_qty: 0, supplier: r.supplier }));
   const { error } = await supabaseClient.from('batches').insert(rows);
   if (error) { showToast('❌ خطأ: ' + error.message, 'error'); return; }
   await loadBatches();
@@ -2448,17 +2120,8 @@ async function confirmImport() {
   showToast('✅ تم الاستيراد بنجاح!', 'success');
 }
 
-function resetImport() {
-  parsedRows = []; parsedHeaders = []; columnMapping = {}; previewData = []; importErrors = [];
-  document.getElementById('file-input').value = '';
-  ['import-step-1','import-step-2','import-step-3','import-step-4'].forEach((id, i) => {
-    document.getElementById(id).classList.toggle('hidden', i !== 0);
-  });
-}
+function resetImport() { parsedRows = []; parsedHeaders = []; columnMapping = {}; previewData = []; importErrors = []; document.getElementById('file-input').value = ''; ['import-step-1','import-step-2','import-step-3','import-step-4'].forEach((id, i) => { document.getElementById(id).classList.toggle('hidden', i !== 0); }); }
 
-// ============================================================
-// Subscription
-// ============================================================
 function evaluateSubscription() {
   if (!currentPharmacy) return;
   const now = new Date();
@@ -2507,27 +2170,18 @@ function handleExpired(endsAt) {
   showLockScreen({ icon: '🔒', title: 'انتهى اشتراكك', message: `<b>بياناتك محفوظة بأمان.</b><br><br>جدّد الآن للاستمرار الكامل.<br><br><small>لديك ${daysLeft} يوم قبل التجميد.</small>`, buttonText: '🔄 جدّد الاشتراك — 300 ج.م/شهر', waText: buildWa2('أريد تجديد الاشتراك.') });
 }
 
-function buildWa2(action) {
-  const pharmacyName = currentPharmacy?.name || 'صيدليتي';
-  const email = currentUser?.email || '';
-  return `https://wa.me/201505133736?text=${encodeURIComponent(`مرحبًا،\nأنا ${pharmacyName}.\n${action}\nبريدي: ${email}`)}`;
-}
+function buildWa2(action) { const pharmacyName = currentPharmacy?.name || 'صيدليتي'; const email = currentUser?.email || ''; return `https://wa.me/201505133736?text=${encodeURIComponent(`مرحبًا،\nأنا ${pharmacyName}.\n${action}\nبريدي: ${email}`)}`; }
 
-function showLockScreen({ icon, title, message, buttonText, waText }) {
-  document.getElementById('lock-icon').textContent = icon;
-  document.getElementById('lock-title').textContent = title;
-  document.getElementById('lock-message').innerHTML = message;
-  document.getElementById('lock-subscribe-btn').textContent = buttonText;
-  document.getElementById('lock-subscribe-btn').href = waText;
-  document.getElementById('lock-screen').classList.remove('hidden');
-}
+function showLockScreen({ icon, title, message, buttonText, waText }) { document.getElementById('lock-icon').textContent = icon; document.getElementById('lock-title').textContent = title; document.getElementById('lock-message').innerHTML = message; document.getElementById('lock-subscribe-btn').textContent = buttonText; document.getElementById('lock-subscribe-btn').href = waText; document.getElementById('lock-screen').classList.remove('hidden'); }
 
 async function initAfterLogin(user) {
   currentUser = user;
   await loadPharmacy();
   await loadCategories();
+  await loadGroups();
   await loadBranches();
   await loadBatches();
+  await loadMovements();
   document.getElementById('loading-screen').classList.add('hidden');
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('flex');
@@ -2537,23 +2191,11 @@ async function initAfterLogin(user) {
   evaluateSubscription();
 }
 
-function showAuth() {
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('auth-screen').classList.remove('hidden');
-  document.getElementById('auth-screen').classList.add('flex');
-}
+function showAuth() { document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('app').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex'); }
 
-async function checkSession() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session?.user) await initAfterLogin(session.user);
-  else showAuth();
-}
+async function checkSession() { const { data: { session } } = await supabaseClient.auth.getSession(); if (session?.user) await initAfterLogin(session.user); else showAuth(); }
 
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) await initAfterLogin(session.user);
-  else if (event === 'SIGNED_OUT') showAuth();
-});
+supabaseClient.auth.onAuthStateChange(async (event, session) => { if (event === 'SIGNED_IN' && session?.user) await initAfterLogin(session.user); else if (event === 'SIGNED_OUT') showAuth(); });
 
 checkSession();
 </script>
